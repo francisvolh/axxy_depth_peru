@@ -1,8 +1,12 @@
+library(tidyverse)
+
 #loop for merging summary of dives and summary of trips
+
+SUMMAGPS<-read.csv("C:/Users/franc/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 2 - Tracks and overlap/SUMMAGPS.csv")
 
 df<-SUMMAGPS #summary of TRIPS (cleaned and valid trips only) from original GPS dataframe from seabiRds with "unique_trip_ids" (dep_id + trip_id)
 
-SUMMADIVES<-readRDS("SUMMADIVES.RDS") #summary of dives, with just dive_id, from DEPTH file from seabiRds 
+SUMMADIVES<-readRDS("C:/Users/franc/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/SUMMADIVES.RDS") #summary of dives, with just dive_id, from DEPTH file from seabiRds 
 
 dives<-SUMMADIVES 
 
@@ -13,7 +17,7 @@ df<-df %>%
 
 
 mmerSumm_dives_trips<-NULL #create blank df to keep at the end
-for (i in 1:length(unique(df$unique_trip))) { #loop for every unique trip per bird
+for (i in unique(df$unique_trip)) { #loop for every unique trip per bird
 
   one_trip<-df[which(df$unique_trip==i),]#subset GPS df for 1 unique trip
   
@@ -37,3 +41,4 @@ for (i in 1:length(unique(df$unique_trip))) { #loop for every unique trip per bi
   
   mmerSumm_dives_trips<-rbind(mmerSumm_dives_trips, one_trip_summs)#incoorporate every object of the loop per unique trip
 }
+View(mmerSumm_dives_trips)
