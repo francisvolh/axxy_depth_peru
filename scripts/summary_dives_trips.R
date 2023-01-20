@@ -2,7 +2,7 @@ library(tidyverse)
 library(seabiRds)
 library(imputeTS)
 
-merged.tdr.gps<-readRDS("C:/Users/franc/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/merged.tdr.gps.RDS")
+merged.tdr.gps<-readRDS("C:/Users/franc/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/merged.tdr.gps.RDS")
 
 ###
 ###Start getting metrics for dives
@@ -29,9 +29,15 @@ hist(SUMMADIVES$maxDepth)
 hist(SUMMADIVES[which(SUMMADIVES$Species == "PEBO"),]$maxDepth)
 hist(SUMMADIVES[which(SUMMADIVES$Species == "GUCO"),]$maxDepth)
 
+
+###
+###
 #from tdrdata RDS
 ##summary of dive directly from TDR data alone, no trip
-SUMMADIVES <- tdrdata %>% 
+
+depthData<-readRDS(file ="C:/Users/franc/OneDrive - McGill University/Documents/McGill/Field data/05 GN 2019 Nov/axxys/technoTDRPeru_data_NEW.RDS")
+
+SUMMADIVES <- depthData %>% 
   mutate(
     time = lubridate::with_tz(time,tz = "America/Lima"),
     in_dive = ifelse(depth >0.5, 1, 0)
