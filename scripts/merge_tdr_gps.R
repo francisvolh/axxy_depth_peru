@@ -3,16 +3,16 @@ library(seabiRds)
 library(imputeTS)
 
 #load depth data from seabiRds object
-tdrdata<-readRDS("C:/Users/franc/OneDrive - McGill University/Documents/McGill/Field data/05 GN 2019 Nov/axxys/technoTDRPeru_data_NEW.RDS")
+tdrdata<-readRDS("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/Field data/05 GN 2019 Nov/axxys/technoTDRPeru_data_NEW.RDS")
 
 #load deployment data
-dep_dataPeru<-readRDS("C:/Users/franc/OneDrive - McGill University/Documents/McGill/Field data/dep_dataPeru_seabiRds.RDS")
+dep_dataPeru<-readRDS("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/Field data/dep_dataPeru_seabiRds.RDS")
 
 #load cleaned final gps data
-gps.data<-readRDS("C:/Users/franc/OneDrive - McGill University/Documents/McGill/Field data/gps_data_seabiRdsFIXED.RDS")
+gps.data<-readRDS("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/Field data/gps_data_seabiRdsFIXED.RDS")
 
 #load final cleaned trip summary with trip IDs, OR PRODUCE A NEW ONE THAT INCLUDES SHORT TRIPS????? or and in colony times?????
-SUMMAGPS<-read.csv("C:/Users/franc/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 2 - Tracks and overlap/SUMMAGPS.csv")
+SUMMAGPS<-read.csv("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 2 - Tracks and overlap/SUMMAGPS.csv")
 
 gpsIDs<-unique(tdrdata$dep_id)
 
@@ -38,7 +38,8 @@ tdrdata <- tdrdata %>%
 
 merged.tdr.gps <- merge(gps.dataTDR, tdrdata, by=c("dep_id","time"), all=TRUE)
 
-
+merged.tdr.gps<-merged.tdr.gps %>% 
+  filter(dep_id != "C02PEBO_20191112_A150_S2") # sat on a rock for 2 hours
 
 #fill out gps location for tdr data, and recalculate all dt, speed, and dist, to fill missing values
 merged.tdr.gps <- merged.tdr.gps %>%
@@ -55,6 +56,7 @@ merged.tdr.gps <- merged.tdr.gps %>%
                           coldist < 1 ~ "Colony"),
     species = substring(dep_id, 4, 7)
   )
+
 merged.tdr.gps <- select(merged.tdr.gps, -c(altitude, gpsspeed, satellites, hdop, maxsignal, inrange, wetdry))
 
 merged.tdr.gps$depth[is.na(merged.tdr.gps$depth)] <- 0
