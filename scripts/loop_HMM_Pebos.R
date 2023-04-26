@@ -3,7 +3,7 @@ library(seabiRds)
 library(imputeTS)
 library(ggplot2)
 library(momentuHMM)
-library(raster)
+#library(raster) # for depth from bathymetric map
 
 dep <- readRDS("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/Field data/dep_dataPeru_seabiRds.RDS")
 
