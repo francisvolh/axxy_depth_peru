@@ -46,7 +46,7 @@ dep<-dep[-dlw_idx,]
 ## Get list of raw data files to process
 #
 setwd("axxys pebos gucos")
-fn <- list.files('axxys pebos gucos', full.names = T, pattern = '.csv')
+fn <- list.files('/project/6005805/francisv/axxys pebos gucos', full.names = T, pattern = '.csv')
 
 # output directory
 
@@ -62,95 +62,97 @@ if (dir.exists(out_dir)== FALSE) {
 ########################################
 
 
-for (i in 1:2) {
+for (i in 1:length(dep)) {
   
   dd <- dep$dep_id[i]
   idx <- grep(dd, fn)
-  
-  print(paste('Start:', dd, 'at', Sys.time()))
-  
-  dat <- read.csv(fn[idx], stringsAsFactors = F, sep = ',')
-  
-  dat <- dat %>% 
-    dplyr::mutate(
-      dep_id = dd,
-      time = as.POSIXct(Timestamp, tz = 'UTC', format = "%d/%m/%Y %H:%M:%OS") 
-    ) %>% 
-    dplyr::select(dep_id, time, X, Y, Z, location.lon, location.lat, Depth) %>% 
-    dplyr::rename(x = X, y = Y, z = Z, lon = location.lon, lat = location.lat) %>% 
-    dplyr::filter(time > dep$time_released[dep$dep_id == dd],
-                  time < dep$time_recaptured[dep$dep_id == dd])
-  
-  freq <- seabiRds::getFrequency(dat$time)
-  
-  dat <- dat %>% 
-    dplyr::mutate(
-      lon = imputeTS::na_interpolation(lon),
-      lat = imputeTS::na_interpolation(lat),
-      coldist = seabiRds::getColDist(lon = lon, lat = lat, 
-                                     colonyLon = dep$dep_lon[dep$dep_id == dd],
-                                     colonyLat = dep$dep_lat[dep$dep_id == dd]),
-      wbf = seabiRds::getPeakFrequency(data = z, time = time, method = 'fft',
-                                       window = 30,
-                                       maxfreq = 10, 
-                                       threshold = 0.2,
-                                       sample = 1),
-      odba = seabiRds::getDBA(X = x, Y = y, Z = z, time = time, window = 60),
-      odba = zoo::rollmean(odba, k =  60 * freq, fill = NA, na.rm = T),
-      Pitch = seabiRds::getPitch(X = x, Y = y, Z = z, time = time, window = 1),
-      Depth = imputeTS::na_interpolation(Depth),
-    ) %>% slice(seq(1, nrow(dat), freq*5))
-  
-  dat<-seabiRds::filterSpeed(dat, lon = "lon", lat="lat", time="time", threshold = 101)
-  
-  d <- dat %>% 
-    dplyr::select(dep_id, time, lon, lat, coldist, wbf, odba, Depth) %>% 
-    rename(ID = dep_id) %>% 
-    prepData(type = "LL", coordNames = c("lon", "lat")) %>% 
-    mutate(
-      colony = ifelse(coldist < 1, 1, 0), #could be parameter mindist
-      wbf = ifelse(wbf < 2, 0, wbf),
-      diving = ifelse(Depth > 0.5, 1, 0)#could be paramerte mindepth
+  if(!identical(idx, integer(0))){
+    print(paste('Start:', dd, 'at', Sys.time()))
+    
+    dat <- read.csv(fn[idx], stringsAsFactors = F, sep = ',')
+    
+    dat <- dat %>% 
+      dplyr::mutate(
+        dep_id = dd,
+        time = as.POSIXct(Timestamp, tz = 'UTC', format = "%d/%m/%Y %H:%M:%OS") 
+      ) %>% 
+      dplyr::select(dep_id, time, X, Y, Z, location.lon, location.lat, Depth) %>% 
+      dplyr::rename(x = X, y = Y, z = Z, lon = location.lon, lat = location.lat) %>% 
+      dplyr::filter(time > dep$time_released[dep$dep_id == dd],
+                    time < dep$time_recaptured[dep$dep_id == dd])
+    
+    freq <- seabiRds::getFrequency(dat$time)
+    
+    dat <- dat %>% 
+      dplyr::mutate(
+        lon = imputeTS::na_interpolation(lon),
+        lat = imputeTS::na_interpolation(lat),
+        coldist = seabiRds::getColDist(lon = lon, lat = lat, 
+                                       colonyLon = dep$dep_lon[dep$dep_id == dd],
+                                       colonyLat = dep$dep_lat[dep$dep_id == dd]),
+        wbf = seabiRds::getPeakFrequency(data = z, time = time, method = 'fft',
+                                         window = 30,
+                                         maxfreq = 10, 
+                                         threshold = 0.2,
+                                         sample = 1),
+        odba = seabiRds::getDBA(X = x, Y = y, Z = z, time = time, window = 60),
+        odba = zoo::rollmean(odba, k =  60 * freq, fill = NA, na.rm = T),
+        Pitch = seabiRds::getPitch(X = x, Y = y, Z = z, time = time, window = 1),
+        Depth = imputeTS::na_interpolation(Depth),
+      ) %>% slice(seq(1, nrow(dat), freq*5))
+    
+    dat<-seabiRds::filterSpeed(dat, lon = "lon", lat="lat", time="time", threshold = 101)
+    
+    d <- dat %>% 
+      dplyr::select(dep_id, time, lon, lat, coldist, wbf, odba, Depth) %>% 
+      rename(ID = dep_id) %>% 
+      prepData(type = "LL", coordNames = c("lon", "lat")) %>% 
+      mutate(
+        colony = ifelse(coldist < 1, 1, 0), #could be parameter mindist
+        wbf = ifelse(wbf < 2, 0, wbf),
+        diving = ifelse(Depth > 0.5, 1, 0)#could be paramerte mindepth
+      )
+    
+    
+    m <- fitHMM(data=d,
+                nbStates=nbStates,
+                dist=list(wbf = wbfDist, colony = colonyDist, diving = diveDist),
+                Par0=list( wbf = wbfPar, colony = colonyPar, diving = divePar),
+                formula = ~ 1
     )
+    
+    dat$HMM <- viterbi(m)
+    dat$HMM <- factor(dat$HMM, labels = stateNames)
+    
+    saveRDS(m, paste0(out_dir, '/', dd,'_HMM.RDS'))
+    write.csv(dat, paste0(out_dir, '/', dd,'.csv'), row.names = F)
+    
+    bp <- dat %>% 
+      dplyr::select(time, coldist, wbf, Depth, HMM) %>% 
+      tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth')) %>% 
+      ggplot2::ggplot(ggplot2::aes(x = HMM, y = value)) +
+      ggplot2::geom_boxplot() +
+      ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
+      ggplot2::theme(text = element_text(size = 10))
+    
+    
+    tp <- dat %>% 
+      dplyr::select(time, coldist, wbf, Depth, odba, HMM) %>% 
+      tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth' )) %>% 
+      ggplot2::ggplot(ggplot2::aes(x = time, y = value)) +
+      ggplot2::geom_line() +
+      ggplot2::geom_point(ggplot2::aes(col = HMM)) +
+      ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
+      ggplot2::theme(legend.position = c(0.10, 0.90),
+                     legend.background = element_blank(),
+                     legend.key = element_blank(),
+                     text = element_text(size = 10))
+    
+    p <- cowplot::plot_grid(bp, tp)
+    ggsave(paste0(out_dir, '/', dd,'_plots.png'), p, units = 'in', width = 10, height = 5)
+    
+    rm(m)
+    print(paste("Finished", dd, "at", Sys.time()))
+  }else{}
   
-  
-  m <- fitHMM(data=d,
-              nbStates=nbStates,
-              dist=list(wbf = wbfDist, colony = colonyDist, diving = diveDist),
-              Par0=list( wbf = wbfPar, colony = colonyPar, diving = divePar),
-              formula = ~ 1
-  )
-  
-  dat$HMM <- viterbi(m)
-  dat$HMM <- factor(dat$HMM, labels = stateNames)
-  
-  saveRDS(m, paste0(out_dir, '/', dd,'_HMM.RDS'))
-  write.csv(dat, paste0(out_dir, '/', dd,'.csv'), row.names = F)
-  
-  bp <- dat %>% 
-    dplyr::select(time, coldist, wbf, Depth, HMM) %>% 
-    tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth')) %>% 
-    ggplot2::ggplot(ggplot2::aes(x = HMM, y = value)) +
-    ggplot2::geom_boxplot() +
-    ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
-    ggplot2::theme(text = element_text(size = 10))
-  
-  
-  tp <- dat %>% 
-    dplyr::select(time, coldist, wbf, Depth, odba, HMM) %>% 
-    tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth' )) %>% 
-    ggplot2::ggplot(ggplot2::aes(x = time, y = value)) +
-    ggplot2::geom_line() +
-    ggplot2::geom_point(ggplot2::aes(col = HMM)) +
-    ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
-    ggplot2::theme(legend.position = c(0.10, 0.90),
-                   legend.background = element_blank(),
-                   legend.key = element_blank(),
-                   text = element_text(size = 10))
-  
-  p <- cowplot::plot_grid(bp, tp)
-  ggsave(paste0(out_dir, '/', dd,'_plots.png'), p, units = 'in', width = 10, height = 5)
-  
-  rm(m)
-  print(paste("Finished", dd, "at", Sys.time()))
 }
