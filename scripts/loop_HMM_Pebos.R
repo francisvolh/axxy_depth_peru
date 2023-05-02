@@ -1,4 +1,5 @@
 library(dplyr)
+#devtools::install_github("francisvolh/seabiRds")
 library(seabiRds)
 library(imputeTS)
 library(ggplot2)
@@ -74,6 +75,7 @@ for (i in 1:length(dep)) { #need to improve the loop so there is error for an NA
     print(paste('Start:', dd, 'at', Sys.time()))
     
     #dat <- vroom(fn[idx], col_types= "c?nnncnnnnnndnnn", delim = ',') #reads fast but next steps are slower it seems
+    
     
     dat<-read.csv(fn[idx], stringsAsFactors = FALSE, sep = ",")
     
