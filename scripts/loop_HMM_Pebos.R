@@ -67,12 +67,12 @@ if (dir.exists(out_dir)== FALSE) {
 
 #all axxy csv files that are available
 
-for (i in 1:length(dep)) { #need to improve the loop so there is error for an NA read at the end, does not change results though
+for (i in 1:length(dep$dep_id)) { #need to improve the loop so there is error for an NA read at the end, does not change results though
   
   dd <- dep$dep_id[i]
   idx <- grep(dd, fn)
   if(!identical(idx, integer(0))){
-    print(paste('Start:', dd, 'at', Sys.time()))
+    print(paste('Start:', dd, 'at', format(Sys.time(), "%T")))
     
     #dat <- vroom(fn[idx], col_types= "c?nnncnnnnnndnnn", delim = ',') #reads fast but next steps are slower it seems
     
@@ -160,9 +160,11 @@ for (i in 1:length(dep)) { #need to improve the loop so there is error for an NA
     ggsave(paste0(out_dir, '/', dd,'_plots.png'), p, units = 'in', width = 10, height = 5)
     
     rm(m)
-    print(paste("Finished", dd, "at", Sys.time()))
+    print(paste("Finished", dd, "at", format(Sys.time(), "%T")))
+    
   }else{}
   
 }
+
 
 
