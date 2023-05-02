@@ -67,7 +67,7 @@ if (dir.exists(out_dir)== FALSE) {
 
 #all axxy csv files that are available
 
-for (i in 1:length(dep$dep_id)) { #need to improve the loop so there is error for an NA read at the end, does not change results though
+for (i in 1:length(dep$dep_id)) { #check if this fix helped now looking at an NA at the end of loop and giving an Error
   
   dd <- dep$dep_id[i]
   idx <- grep(dd, fn)

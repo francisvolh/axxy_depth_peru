@@ -4,6 +4,7 @@ library(imputeTS)
 library(ggplot2)
 library(momentuHMM)
 library(cowplot)
+#library(geosphere) #may not be needed in CC because of geos module?
 #library(raster) # for depth from bathymetric map
 
 dep <- readRDS("dep_dataPeru_seabiRds.RDS")
@@ -62,14 +63,19 @@ if (dir.exists(out_dir)== FALSE) {
 ########################################
 
 
-for (i in 1:length(dep)) {
+#all axxy csv files that are available
+
+for (i in 1:length(dep$dep_id)) { #check if this fix helped now looking at an NA at the end of loop and giving an Error
   
   dd <- dep$dep_id[i]
   idx <- grep(dd, fn)
   if(!identical(idx, integer(0))){
-    print(paste('Start:', dd, 'at', Sys.time()))
+    print(paste('Start:', dd, 'at', format(Sys.time(), "%T")))
     
-    dat <- read.csv(fn[idx], stringsAsFactors = F, sep = ',')
+    #dat <- vroom(fn[idx], col_types= "c?nnncnnnnnndnnn", delim = ',') #reads fast but next steps are slower it seems
+    
+    
+    dat<-read.csv(fn[idx], stringsAsFactors = FALSE, sep = ",")
     
     dat <- dat %>% 
       dplyr::mutate(
@@ -152,7 +158,10 @@ for (i in 1:length(dep)) {
     ggsave(paste0(out_dir, '/', dd,'_plots.png'), p, units = 'in', width = 10, height = 5)
     
     rm(m)
-    print(paste("Finished", dd, "at", Sys.time()))
+    print(paste("Finished", dd, "at", format(Sys.time(), "%T")))
+    
   }else{}
   
 }
+
+
