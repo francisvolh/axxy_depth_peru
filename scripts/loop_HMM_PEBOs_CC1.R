@@ -30,19 +30,21 @@ colonyPar <- c(0.1, 0.1, 0.99999, 0.0000000001)
 diveDist <- 'bern'
 divePar <- c(0.0000000001, 0.999999999, 0.0000000001, 0.0000000001)
 
-#select only DLW deployment, for boobies
-rownames(dep) <- 1:nrow(dep)
-dlw_idx<-grep('A', dep$dep_id) #keep all Axxy deployments (will keep Camera and Guco deployments)
-dep<-dep[dlw_idx,]
+#select only DLW deployment, for boobies ##NO need as the ifelse loop selects all the available files 
+#in the working directory that match the dep sheet
 
-rownames(dep) <- 1:nrow(dep)
+#rownames(dep) <- 1:nrow(dep)
+#dlw_idx<-grep('A', dep$dep_id) #keep all Axxy deployments (will keep Camera and Guco deployments)
+#dep<-dep[dlw_idx,]
 
-dlw_idx<-grep('C', dep$dep_id) #get rid of all the camera and gucos deployments
-dep<-dep[-dlw_idx,]
+#rownames(dep) <- 1:nrow(dep)
 
-rownames(dep) <- 1:nrow(dep)
-dlw_idx<-grep('G', dep$dep_id) #get rid of non DLW axxy deps for boobies
-dep<-dep[-dlw_idx,]
+#dlw_idx<-grep('C', dep$dep_id) #get rid of all the camera and gucos deployments
+#dep<-dep[-dlw_idx,]
+
+#rownames(dep) <- 1:nrow(dep)
+#dlw_idx<-grep('G', dep$dep_id) #get rid of non DLW axxy deps for boobies
+#dep<-dep[-dlw_idx,]
 
 ## Get list of raw data files to process
 #
