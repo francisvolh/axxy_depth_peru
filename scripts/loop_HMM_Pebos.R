@@ -11,7 +11,11 @@ library(geosphere) # some part  ofthe  code required it installed now
 dep <- readRDS("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/Field data/dep_dataPeru_seabiRds.RDS")
 
 #set model parameters
-stateNames <- c("Flying", "Foraging", "Colony", "Resting") #, 'Resting' ADD A FORAGING 2, for 
+stateNames <- c("Flying", "Foraging", "Colony", "Resting") 
+
+### increase states: think about it
+
+#, 'Resting' ADD A FORAGING 2, for 
 nbStates <- length(stateNames)
 
 wbfDist <- "gamma" # step distribution
@@ -29,21 +33,23 @@ colonyPar <- c(0.1, 0.1, 0.99999, 0.0000000001)
 #angleDist <-
 
 diveDist <- 'bern'
-divePar <- c(0.0000000001, 0.999999999, 0.0000000001, 0.0000000001)
+divePar <- c(0.0000000001, 0.999999999, 0.0000000001, 0.0000000001) ###change foraging to 0.5 which might include the flights between the flights
 
-#select only DLW deployment, for boobies
-rownames(dep) <- 1:nrow(dep)
-dlw_idx<-grep('A', dep$dep_id) #keep all Axxy deployments (will keep Camera and Guco deployments)
-dep<-dep[dlw_idx,]
 
-rownames(dep) <- 1:nrow(dep)
+#select only DLW deployment, for boobies DONT NEED TO SELECT because of the ifelse in the loop now
 
-dlw_idx<-grep('C', dep$dep_id) #get rid of all the camera and gucos deployments
-dep<-dep[-dlw_idx,]
+#rownames(dep) <- 1:nrow(dep)
+#dlw_idx<-grep('A', dep$dep_id) #keep all Axxy deployments (will keep Camera and Guco deployments)
+#dep<-dep[dlw_idx,]
 
-rownames(dep) <- 1:nrow(dep)
-dlw_idx<-grep('G', dep$dep_id) #get rid of non DLW axxy deps for boobies
-dep<-dep[-dlw_idx,]
+#rownames(dep) <- 1:nrow(dep)
+
+#dlw_idx<-grep('C', dep$dep_id) #get rid of all the camera and gucos deployments
+#dep<-dep[-dlw_idx,]
+
+#rownames(dep) <- 1:nrow(dep)
+#dlw_idx<-grep('G', dep$dep_id) #get rid of non DLW axxy deps for boobies
+#dep<-dep[-dlw_idx,]
 
 
 ## Get list of raw data files to process
@@ -76,7 +82,6 @@ for (i in 1:length(dep$dep_id)) { #check if this fix helped now looking at an NA
     
     #dat <- vroom(fn[idx], col_types= "c?nnncnnnnnndnnn", delim = ',') #reads fast but next steps are slower it seems
     
-    
     dat<-read.csv(fn[idx], stringsAsFactors = FALSE, sep = ",")
     
     dat <- dat %>% 
@@ -100,14 +105,15 @@ for (i in 1:length(dep$dep_id)) { #check if this fix helped now looking at an NA
                                        colonyLat = dep$dep_lat[dep$dep_id == dd]),
         wbf = seabiRds::getPeakFrequency(data = z, time = time, method = 'fft',
                                          window = 30,
-                                         maxfreq = 10, 
+                                         maxfreq = 10, ###set to 6
                                          threshold = 0.2,
                                          sample = 1),
+        #### add step length as variable, but would need to interpolate CORRECTLY crawl (or ex-foisgrass)
         odba = seabiRds::getDBA(X = x, Y = y, Z = z, time = time, window = 60),
         odba = zoo::rollmean(odba, k =  60 * freq, fill = NA, na.rm = T),
         Pitch = seabiRds::getPitch(X = x, Y = y, Z = z, time = time, window = 1),
-        Depth = imputeTS::na_interpolation(Depth),
-      ) %>% slice(seq(1, nrow(dat), freq*5))
+        Depth = imputeTS::na_interpolation(Depth), 
+      ) %>% slice(seq(1, nrow(dat), freq*5)) ### make average by minute instead of slicing
     
     dat<-seabiRds::filterSpeed(dat, lon = "lon", lat="lat", time="time", threshold = 101)
     
@@ -121,13 +127,14 @@ for (i in 1:length(dep$dep_id)) { #check if this fix helped now looking at an NA
         diving = ifelse(Depth > 0.5, 1, 0)#could be paramerte mindepth
       )
     
+    #### split processing and HMM into different loops
     
     m <- fitHMM(data=d,
                 nbStates=nbStates,
                 dist=list(wbf = wbfDist, colony = colonyDist, diving = diveDist),
                 Par0=list( wbf = wbfPar, colony = colonyPar, diving = divePar),
                 formula = ~ 1
-    )
+    ) ## run as a population
     
     dat$HMM <- viterbi(m)
     dat$HMM <- factor(dat$HMM, labels = stateNames)
