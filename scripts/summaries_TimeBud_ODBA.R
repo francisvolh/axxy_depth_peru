@@ -9,29 +9,28 @@ getwd()
 
 setwd("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/processed_acc_first run")
 
+#create a list of names of pre produced outputs from HMM and axxy data
 fn2<-list.files(pattern = ".csv")
 
 
 
-#test 2
-all_birds<-NULL
+#merge all birds HMM result data 
+all_birds<-NULL #object to bind all birds into
 
 
 system.time({
   
   for (i in 1:length(fn2)) {
     
-    bird1<-read.csv(fn2[i])
+    bird1<-read.csv(fn2[i]) #read each bird file
     
+    #produce a diff time column
     bird1$diftime <- c(NA, as.numeric( difftime( bird1$time[2:nrow(bird1)], bird1$time[1:(nrow(bird1) - 1)], units = 'hours')))
     
-    all_birds <-rbind(summary_budget, bird1)
-    
-    
-   
+    #bind all data
+    all_birds <-rbind(all_birds, bird1)
     
     #sum1<-pivot_wider(sum1, names_from = HMM, values_from = TotalTime)
-    
     #sum1$dep_id <- bird1$dep_id[1]
     #sum1$totalSamp <- as.numeric(- difftime( bird1$time[1], bird1$time[(nrow(bird1))], units = 'hours'))
     #summary_budget <-rbind(summary_budget, sum1)
@@ -51,7 +50,7 @@ samptime <- all_birds %>%
   
              
 
-sum1 <- summary_budget %>% 
+sum1 <- all_birds %>% 
   group_by(HMM, dep_id) %>% 
   summarise(
     TotalTimeDay = sum(diftime, na.rm = TRUE),
@@ -61,11 +60,12 @@ sum1 <- summary_budget %>%
 merged_summed <- merge(sum1, samptime, by="dep_id", all=TRUE)
 
 
+#extract variable names
 vars1 <- merged_summed %>% select(c("TotalTimeDay", "TotalODBADay")) %>% names()
 
 merged_summed2<-merged_summed %>% 
   mutate(
-    across(vars1, ~.x/SampTime, .names ="{col}")
+    across(all_of(vars1), ~.x/SampTime, .names ="{col}")#total time and ODBA of each activty divided by total Sampling time
   )
 
 names(merged_summed2)
@@ -86,8 +86,9 @@ B<-ggplot(merged_summed2, aes(x = HMM, y = TotalODBADay, group = HMM, color =  H
 cowplot::plot_grid(A, B, nrow = 2)
 
 
-#get summary of time budgets, not perfect when trying to add OBDA as it is
 
+
+#get summary of time budgets, not perfect when trying to add OBDA as it is
 
 summary_budget<-NULL
 
