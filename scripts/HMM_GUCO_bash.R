@@ -1,6 +1,5 @@
 #!/usr/bin/env Rscript
 
-
 args <- commandArgs(trailingOnly = TRUE)
 
 library(dplyr)
@@ -53,8 +52,8 @@ divePar <- c(0.0000000001, 0.999999999, 0.0000000001, 0.0000000001)
 
 ## Get list of raw data files to process
 #
-setwd("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data")
-fn <- list.files(path='C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data',full.names = T, pattern = '.csv')
+setwd("axxys pebos gucos")
+fn <- list.files('/project/6005805/francisv/axxys pebos gucos', full.names = T, pattern = '.csv')
 
 # output directory
 
@@ -71,9 +70,10 @@ if (dir.exists(out_dir)== FALSE) {
 
 #chose the path to the 1 bird part in the folder
 
-idx <- grep("G22GUCO_20191124_A48_part1.csv", fn) #full name of the part I need to work
 
-idxDEP <- grep("G22GUCO", dep$dep_id) # only the dep ID part
+idx <- grep(args[1], fn) #full name of the part I need to work
+
+idxDEP <- grep(args[2], dep$dep_id) # only the dep ID part
 
 #for only GUCO 22 split  axxy csv files
 
