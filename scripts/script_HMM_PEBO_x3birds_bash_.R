@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-my.my.args <- commandmy.args(trailingOnly = TRUE)
+my.args <- commandArgs(trailingOnly = TRUE)
 
 library(dplyr)
 library(seabiRds)
@@ -52,8 +52,11 @@ divePar <- c(0.0000000001, 0.999999999, 0.0000000001, 0.0000000001)
 
 ## Get list of raw data files to process
 #
+#setwd("C:/Users/francis van oordt/Downloads/done full axy")
+#fn <- list.files(path="C:/Users/francis van oordt/Downloads/done full axy",full.names = T, pattern = '.csv')
+
 setwd("axxys pebos gucos")
-fn <- list.files('/project/6005805/francisv/axxys pebos gucos', full.names = T, pattern = '.csv')
+fn <- list.files('/project/6005805/francisv/axxys pebos gucos/processed_acc/raw_axxy', full.names = T, pattern = '.csv')
 
 # output directory
 
@@ -68,14 +71,13 @@ if (dir.exists(out_dir)== FALSE) {
 #dep<-dep2[4:5,]
 ########################################
 
-#chose the path to the 1 bird part in the folder
-
-
-idx <- grep(my.args, fn) #find position of files to work with
-
-idxDEP <- grep(my.args, dep$dep_id) #find position in Dep sheet of 3 birds selected
-
-dep <- dep[idxDEP] #reduce dep sheet to 3 birds
+# create a list of the arguments from Bash, maybe there is a more efficiento way for this
+id_bird1 <- fn[grep(my.args[1], fn)]
+id_bird2 <- fn[grep(my.args[2], fn)]
+id_bird3 <- fn[grep(my.args[3], fn)]
+  
+  
+bird3_list <- c(id_bird1, id_bird3, id_bird3)
 
 #to work with 3 files at a time 
 
@@ -125,11 +127,11 @@ for (i in 1:length(dep$dep_id)) { #loop over only 3 birds
     
     dat<-seabiRds::filterSpeed(dat, lon = "lon", lat="lat", time="time", threshold = 101)
     
-   
+   birds3 <- rbind(birds3, dat)
     
   }else{}
   
-  birds3 <- rbind(birds3, dat)
+  
 }
 
 #### split processing and HMM into different loops
