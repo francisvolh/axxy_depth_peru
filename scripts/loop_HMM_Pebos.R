@@ -1,3 +1,5 @@
+#Code will loop over all individual CSV files in the working directory, using the full dep sheet 
+
 library(dplyr)
 #devtools::install_github("francisvolh/seabiRds")
 library(seabiRds)
@@ -55,7 +57,7 @@ divePar <- c(0.0000000001, 0.999999999, 0.0000000001, 0.0000000001) ###change fo
 ## Get list of raw data files to process
 #
 setwd("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data")
-fn <- list.files(path='C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data',full.names = T, pattern = '.csv')
+fn <- list.files(path='C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/done full axy',full.names = T, pattern = '.csv')
 
 
 # output directory
