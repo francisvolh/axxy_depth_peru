@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
-my.args <- commandArgs(trailingOnly = TRUE)
+my.args <- commandArgs(trailingOnly = TRUE) #be careful in the future with ARGUMENTS (eg. A01... A11)that dont match the logger ID name!!!
+
 
 library(dplyr)
 library(seabiRds)
@@ -77,22 +78,26 @@ id_bird2 <- fn[grep(my.args[2], fn)]
 id_bird3 <- fn[grep(my.args[3], fn)]
   
   
-bird3_list <- c(id_bird1, id_bird3, id_bird3)
+bird3_list <- c(id_bird1, id_bird3, id_bird3) #new list of files to work with according to arguments given in Bash
+
 
 #to work with 3 files at a time 
 
 birds3 <- NULL
   
-for (i in 1:length(dep$dep_id)) { #loop over only 3 birds
+for (i in 1:length(dep$dep_id) ) { #loop over only 3 birds
   
   dd <- dep$dep_id[i]
-  idx <- grep(dd, fn)
+  
+  
+  idx <- grep(dd, bird3_list)
+  
   if(!identical(idx, integer(0))){
     print(paste('Start:', dd, 'at', format(Sys.time(), "%T")))
     
     #dat <- vroom(fn[idx], col_types= "c?nnncnnnnnndnnn", delim = ',') #reads fast but next steps are slower it seems
     
-    dat<-read.csv(fn[idx], stringsAsFactors = FALSE, sep = ",")
+    dat<-read.csv(bird3_list[idx], stringsAsFactors = FALSE, sep = ",")
     
     dat <- dat %>% 
       dplyr::mutate(
