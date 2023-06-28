@@ -5,13 +5,16 @@ library(ggpubr)
 #join DLW results and cassification results: DLW_sheet_Boobies_2019.csv
 
 #load DLW sheet 
-dlw <- read.csv(file.choose()) 
+#dlw <- read.csv(file.choose()) 
 # C:\Users\francis van oordt\OneDrive - McGill University\Documents\McGill\00Res Prop v2\Chap 1 - DLW axxy
 
 
 #load classification calculations
-merged_summed2 <- read.csv(file.choose())
+#merged_summed2 <- read.csv(file.choose())
 #"C:\Users\francis van oordt\OneDrive - McGill University\Documents\McGill\00Res Prop v2\Chap 1 - DLW axxy\axxy_depth_peru\data\processed_acc_third_run\merged_summed2.csv"
+
+#already saved 
+calculations<- read.csv(file.choose()) ##"C:\Users\francis van oordt\OneDrive - McGill University\Documents\McGill\00Res Prop v2\Chap 1 - DLW axxy\axxy_depth_peru\data\processed_acc_third_run\calculations.csv"
 
 
 calculations <- merge(merged_summed2, dlw, by.x = "dep_id", by.y ="Bird", all = TRUE)
@@ -54,15 +57,17 @@ calculations$DBAColRest <- calculations$ODBAResting + calculations$ODBAColony
 reg4 <- lm(data = calculations, formula = DEE.KJ.d.g ~ ODBAColony + ODBAFlying + ODBAForaging + ODBAResting)
 reg5 <- lm(data = calculations, formula =DEE.KJ.d.g ~ DBAColRest + ODBAFlying + ODBAForaging)
 reg6 <- lm(data = calculations, formula =DEE.KJ.d.g ~ DBAColRest + DBAFlyFor )
-
+reg7 <- lm(data = calculations, formula = DEE.KJ.d.g ~ ODBAColony + ODBAResting +  DBAFlyFor)
 
 MuMIn::model.sel(reg4, reg5, reg6)
 
 reg0 <- lm(data = calculations, formula =DEE.KJ.d.g ~ 1 )
 
-mods_full <- MuMIn::model.sel(reg0, reg1, reg2, reg3,reg4, reg5, reg6)
-
+mods_full <- MuMIn::model.sel(reg0, reg1, reg2, reg3,reg4, reg5, reg6, reg7)
+mods_full
 summary(reg6)
+
+summary(reg4)
 
 ggscatter(calculations, y = "DEE.KJ.d.g", x = "DBAColRest",
           color = "black", shape = 21, #size = 3, # Points color, shape and size
@@ -142,6 +147,9 @@ ggscatter(calculations2, y = "DEE.KJ.d.g", x = "ODBAFlying",
           cor.coeff.args = list(method = "pearson", #label.x = 3, 
                                 label.sep = "\n")
 )
+
+write.csv(calculations, "calculations.csv")
+
 
 mods_full.df <- as.data.frame(mods_full)
 write.csv(mods_full.df, "C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/processed_acc_third_run/mods_full.csv")
