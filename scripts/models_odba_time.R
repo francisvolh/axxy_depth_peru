@@ -14,10 +14,10 @@ library(ggpubr)
 #"C:\Users\francis van oordt\OneDrive - McGill University\Documents\McGill\00Res Prop v2\Chap 1 - DLW axxy\axxy_depth_peru\data\processed_acc_third_run\merged_summed2.csv"
 
 #already saved 
-calculations<- read.csv(file.choose()) ##"C:\Users\francis van oordt\OneDrive - McGill University\Documents\McGill\00Res Prop v2\Chap 1 - DLW axxy\axxy_depth_peru\data\processed_acc_third_run\calculations.csv"
+calculationsraw <- read.csv(file.choose()) ##"C:\Users\francis van oordt\OneDrive - McGill University\Documents\McGill\00Res Prop v2\Chap 1 - DLW axxy\axxy_depth_peru\data\processed_acc_third_run\calculations.csv"
 
-
-calculations <- merge(merged_summed2, dlw, by.x = "dep_id", by.y ="Bird", all = TRUE)
+calculations <- calculationsraw
+#calculations <- merge(merged_summed2, dlw, by.x = "dep_id", by.y ="Bird", all = TRUE)
 
 summary(lm(data = calculations, DEE.KJ.d.g ~ TimeFlying))
 
@@ -36,36 +36,37 @@ ggscatter(calculations, y = "DEE.KJ.d.g", x = "TimeFlying",
 )
 names(calculations)
 
-
+head(calculations)
 #including outlier bird
-calculations$TFlyFor <- calculations$TimeFlying + calculations$TimeForaging
-calculations$TColRest <- calculations$TimeResting + calculations$TimeColony
+#calculations$TFlyFor <- calculations$TimeFlying + calculations$TimeForaging
+#calculations$TColRest <- calculations$TimeResting + calculations$TimeColony
 
 #############################################################################################3
-
 reg1 <- lm(data = calculations, formula = DEE.KJ.d.g ~ TimeColony + TimeFlying + TimeForaging + TimeResting + 0)
 reg2 <- lm(data = calculations, formula =DEE.KJ.d.g ~ TColRest + TimeFlying + TimeForaging + 0 )
 reg3 <- lm(data = calculations, formula =DEE.KJ.d.g ~ TColRest + TFlyFor + 0 )
+reg4 <- lm(data = calculations, formula = DEE.KJ.d.g ~ TimeColony + TimeResting +  TFlyFor + 0)
 
-MuMIn::model.sel(reg1, reg2, reg3)
-
+MuMIn::model.sel(reg1, reg2, reg3, reg4)
 #which has lowest AIC? What are P-values? That is, what activities are similar to one another in terms of energetics? (Where Tcolrest = the sum of the colony of Tcol + Trest).
 
-calculations$DBAFlyFor <- calculations$ODBAFlying + calculations$ODBAForaging
-calculations$DBAColRest <- calculations$ODBAResting + calculations$ODBAColony
+#calculations$DBAFlyFor <- calculations$ODBAFlying + calculations$ODBAForaging
+#calculations$DBAColRest <- calculations$ODBAResting + calculations$ODBAColony
 
-reg4 <- lm(data = calculations, formula = DEE.KJ.d.g ~ ODBAColony + ODBAFlying + ODBAForaging + ODBAResting)
-reg5 <- lm(data = calculations, formula =DEE.KJ.d.g ~ DBAColRest + ODBAFlying + ODBAForaging)
-reg6 <- lm(data = calculations, formula =DEE.KJ.d.g ~ DBAColRest + DBAFlyFor )
-reg7 <- lm(data = calculations, formula = DEE.KJ.d.g ~ ODBAColony + ODBAResting +  DBAFlyFor)
+reg5 <- lm(data = calculations, formula = DEE.KJ.d.g ~ ODBAColony + ODBAFlying + ODBAForaging + ODBAResting)
+reg6 <- lm(data = calculations, formula =DEE.KJ.d.g ~ DBAColRest + ODBAFlying + ODBAForaging)
+reg7 <- lm(data = calculations, formula =DEE.KJ.d.g ~ DBAColRest + DBAFlyFor )
+reg8 <- lm(data = calculations, formula = DEE.KJ.d.g ~ ODBAColony + ODBAResting +  DBAFlyFor)
+
 
 MuMIn::model.sel(reg4, reg5, reg6)
 
 reg0 <- lm(data = calculations, formula =DEE.KJ.d.g ~ 1 )
 
-mods_full <- MuMIn::model.sel(reg0, reg1, reg2, reg3,reg4, reg5, reg6, reg7)
+mods_full <- MuMIn::model.sel(reg0, reg1, reg2, reg3,reg4, reg5, reg6, reg7, reg8)
+
 mods_full
-summary(reg6)
+summary(reg7)
 
 summary(reg4)
 
@@ -88,37 +89,58 @@ ggscatter(calculations, y = "DEE.KJ.d.g", x = "DBAFlyFor",
                                 label.sep = "\n")
 )
 
+
+calculations$predicted1<-predict(reg7, newdata = calculations[ , c("DBAColRest", "DBAFlyFor")])
+
+ggscatter(calculations, y = "DEE.KJ.d.g", 
+          x = "predicted1",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n"),
+          title = "DEE.KJ.d.g and Pred DBAColRest DBAFlyFor (with outlier)"
+)
+
+
+
+
 ###
 #getting rid of outlier bird
 
-calculations2 <- calculations %>% 
+calculations2 <- calculationsraw %>% 
   dplyr::filter( !DEE.KJ.d.g > 1.2)
 
-calculations2$TFlyFor <- calculations2$TimeFlying + calculations2$TimeForaging
-calculations2$TColRest <- calculations2$TimeResting + calculations2$TimeColony
+#calculations2$TFlyFor <- calculations2$TimeFlying + calculations2$TimeForaging
+#calculations2$TColRest <- calculations2$TimeResting + calculations2$TimeColony
 
 #############################################################################################3
 
 reg1 <- lm(data = calculations2, formula = DEE.KJ.d.g ~ TimeColony + TimeFlying + TimeForaging + TimeResting + 0)
 reg2 <- lm(data = calculations2, formula =DEE.KJ.d.g ~ TColRest + TimeFlying + TimeForaging + 0 )
 reg3 <- lm(data = calculations2, formula =DEE.KJ.d.g ~ TColRest + TFlyFor + 0 )
+reg4 <- lm(data = calculations2, formula = DEE.KJ.d.g ~ TimeColony + TimeResting +  TFlyFor + 0)
 
-MuMIn::model.sel(reg1, reg2, reg3)
+MuMIn::model.sel(reg1, reg2, reg3, reg4)
 
 #which has lowest AIC? What are P-values? That is, what activities are similar to one another in terms of energetics? (Where Tcolrest = the sum of the colony of Tcol + Trest).
 
-calculations2$DBAFlyFor <- calculations2$ODBAFlying + calculations2$ODBAForaging
-calculations2$DBAColRest <- calculations2$ODBAResting + calculations2$ODBAColony
+#calculations2$DBAFlyFor <- calculations2$ODBAFlying + calculations2$ODBAForaging
+#calculations2$DBAColRest <- calculations2$ODBAResting + calculations2$ODBAColony
 
-reg4 <- lm(data = calculations2, formula = DEE.KJ.d.g ~ ODBAColony + ODBAFlying + ODBAForaging + ODBAResting)
-reg5 <- lm(data = calculations2, formula =DEE.KJ.d.g ~ DBAColRest + ODBAFlying + ODBAForaging)
-reg6 <- lm(data = calculations2, formula =DEE.KJ.d.g ~ DBAColRest + DBAFlyFor )
+reg5 <- lm(data = calculations2, formula = DEE.KJ.d.g ~ ODBAColony + ODBAFlying + ODBAForaging + ODBAResting)
+reg6 <- lm(data = calculations2, formula =DEE.KJ.d.g ~ DBAColRest + ODBAFlying + ODBAForaging)
+reg7 <- lm(data = calculations2, formula =DEE.KJ.d.g ~ DBAColRest + DBAFlyFor )
+reg8 <- lm(data = calculations2, formula = DEE.KJ.d.g ~ ODBAColony + ODBAResting +  DBAFlyFor)
 
-MuMIn::model.sel(reg4, reg5, reg6)
+
+MuMIn::model.sel(reg5, reg6, reg7, reg8)
 
 reg0 <- lm(data = calculations2, formula =DEE.KJ.d.g ~ 1 )
 
-mods_clean <- MuMIn::model.sel(reg0, reg1, reg2, reg3,reg4, reg5, reg6)
+mods_clean <- MuMIn::model.sel(reg0, reg1, reg2, reg3,reg4, reg5, reg6, reg7, reg8)
 
 mods_clean
 
@@ -148,7 +170,21 @@ ggscatter(calculations2, y = "DEE.KJ.d.g", x = "ODBAFlying",
                                 label.sep = "\n")
 )
 
-write.csv(calculations, "calculations.csv")
+calculations2$predicted1<-predict(reg3, newdata = calculations2[ , c("TColRest" , "TFlyFor")])
+
+ggscatter(calculations2, y = "DEE.KJ.d.g", 
+          x = "predicted1",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n"),
+          title = "DEE.KJ.d.g and Pred TColRest + TFlyFor (no outlier)"
+)
+
+#write.csv(calculations, "calculations.csv")
 
 
 mods_full.df <- as.data.frame(mods_full)
@@ -157,3 +193,206 @@ write.csv(mods_full.df, "C:/Users/francis van oordt/OneDrive - McGill University
 
 mods_clean.df <- as.data.frame(mods_clean)
 write.csv(mods_clean.df, "C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/processed_acc_third_run/mods_clean.csv")
+
+#### #### #### #### 
+#### #### #### #### 
+#### #### #### #### 
+#### #### #### 
+#### with total energy
+#### #### #### 
+
+calculations <- calculationsraw
+summary(lm(data = calculations, DEE.kJ.d ~ TimeFlying))
+
+ggplot(calculations, aes(TimeFlying, DEE.kJ.d))+
+  geom_point( )+
+  geom_smooth(method = 'lm')
+
+ggscatter(calculations, y = "DEE.kJ.d", x = "TimeFlying",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n")
+)
+
+
+ggscatter(calculations, y = "DEE.kJ.d", x = "Mass.avg.",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n")
+)
+
+names(calculations)
+
+head(calculations)
+#including outlier bird
+#calculations$TFlyFor <- calculations$TimeFlying + calculations$TimeForaging
+#calculations$TColRest <- calculations$TimeResting + calculations$TimeColony
+
+#############################################################################################3
+reg1 <- lm(data = calculations, formula = DEE.kJ.d ~ TimeColony + TimeFlying + TimeForaging + TimeResting + 0)
+reg2 <- lm(data = calculations, formula = DEE.kJ.d ~ TColRest + TimeFlying + TimeForaging + 0 )
+reg3 <- lm(data = calculations, formula = DEE.kJ.d ~ TColRest + TFlyFor + 0 )
+reg4 <- lm(data = calculations, formula = DEE.kJ.d ~ TimeColony + TimeResting +  TFlyFor+0)
+
+MuMIn::model.sel(reg1, reg2, reg3, reg4)
+#which has lowest AIC? What are P-values? That is, what activities are similar to one another in terms of energetics? (Where Tcolrest = the sum of the colony of Tcol + Trest).
+
+#calculations$DBAFlyFor <- calculations$ODBAFlying + calculations$ODBAForaging
+#calculations$DBAColRest <- calculations$ODBAResting + calculations$ODBAColony
+
+reg5 <- lm(data = calculations, formula = DEE.kJ.d ~ ODBAColony + ODBAFlying + ODBAForaging + ODBAResting)
+reg6 <- lm(data = calculations, formula = DEE.kJ.d ~ DBAColRest + ODBAFlying + ODBAForaging)
+reg7 <- lm(data = calculations, formula = DEE.kJ.d ~ DBAColRest + DBAFlyFor )
+reg8 <- lm(data = calculations, formula = DEE.kJ.d ~ ODBAColony + ODBAResting +  DBAFlyFor)
+
+
+MuMIn::model.sel(reg5, reg6, reg7, reg8)
+
+reg0 <- lm(data = calculations, formula = DEE.kJ.d ~ 1 )
+
+mods_full <- MuMIn::model.sel(reg0, reg1, reg2, reg3,reg4, reg5, reg6, reg7, reg8)
+
+mods_full
+### NULL MODEL IS BEST
+
+ggscatter(calculations, y = "DEE.kJ.d", x = "DBAColRest",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n")
+)
+ggscatter(calculations, y = "DEE.kJ.d", x = "DBAFlyFor",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n")
+)
+
+
+calculations$predicted1<-predict(reg3, newdata = calculations[ , c("TColRest",  "TFlyFor")])
+
+ggscatter(calculations, y = "DEE.kJ.d", 
+          x = "predicted1",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n"),
+          title = "DEE.KJ.d and Pred TColRest + TFlyFor (with outlier)"
+)
+
+
+###
+#getting rid of outlier bird
+
+calculations2 <- calculationsraw %>% 
+  dplyr::filter( !DEE.kJ.d > 1500)
+
+#calculations2$TFlyFor <- calculations2$TimeFlying + calculations2$TimeForaging
+#calculations2$TColRest <- calculations2$TimeResting + calculations2$TimeColony
+
+
+ggscatter(calculations2, y = "DEE.kJ.d", x = "TimeFlying",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n"),
+)
+
+
+ggscatter(calculations2, y = "DEE.kJ.d", x = "Mass.avg.",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n")
+)
+
+#############################################################################################3
+
+reg1 <- lm(data = calculations2, formula = DEE.kJ.d ~ TimeColony + TimeFlying + TimeForaging + TimeResting + 0)
+reg2 <- lm(data = calculations2, formula = DEE.kJ.d ~ TColRest + TimeFlying + TimeForaging + 0 )
+reg3 <- lm(data = calculations2, formula = DEE.kJ.d ~ TColRest + TFlyFor + 0 )
+reg4 <- lm(data = calculations2, formula = DEE.kJ.d ~ TimeColony + TimeResting +  TFlyFor + 0)
+
+MuMIn::model.sel(reg1, reg2, reg3, reg4)
+
+#which has lowest AIC? What are P-values? That is, what activities are similar to one another in terms of energetics? (Where Tcolrest = the sum of the colony of Tcol + Trest).
+
+#calculations2$DBAFlyFor <- calculations2$ODBAFlying + calculations2$ODBAForaging
+#calculations2$DBAColRest <- calculations2$ODBAResting + calculations2$ODBAColony
+
+reg5 <- lm(data = calculations2, formula = DEE.kJ.d ~ ODBAColony + ODBAFlying + ODBAForaging + ODBAResting)
+reg6 <- lm(data = calculations2, formula =DEE.kJ.d ~ DBAColRest + ODBAFlying + ODBAForaging)
+reg7 <- lm(data = calculations2, formula =DEE.kJ.d ~ DBAColRest + DBAFlyFor )
+reg8 <- lm(data = calculations2, formula = DEE.kJ.d ~ ODBAColony + ODBAResting +  DBAFlyFor)
+
+
+MuMIn::model.sel(reg5, reg6, reg7, reg8)
+
+reg0 <- lm(data = calculations2, formula =DEE.kJ.d ~ 1 )
+
+mods_clean <- MuMIn::model.sel(reg0, reg1, reg2, reg3,reg4, reg5, reg6, reg7, reg8)
+
+mods_clean
+
+summary(reg3)
+
+ggplot(calculations2, aes(TimeFlying, DEE.kJ.d))+
+  geom_point( )+
+  geom_smooth(method = 'lm')
+
+ggscatter(calculations2, y = "DEE.kJ.d", x = "TimeFlying",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n")
+)
+
+ggscatter(calculations2, y = "DEE.kJ.d", x = "ODBAFlying",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n")
+)
+
+calculations2$predicted1<-predict(reg3, newdata = calculations2[ , c("TColRest",  "TFlyFor")])
+
+ggscatter(calculations2, y = "DEE.kJ.d", 
+          x = "predicted1",
+          color = "black", shape = 21, #size = 3, # Points color, shape and size
+          add = "reg.line",  # Add regressin line
+          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+          conf.int = TRUE, # Add confidence interval
+          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+          cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                label.sep = "\n"),
+          title = "DEE.KJ.d and Pred TColRest + TFlyFor (no outlier)"
+)
