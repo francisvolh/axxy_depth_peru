@@ -1,0 +1,79 @@
+#Re-plotting third run for example on 1 bird
+
+getwd()
+list.dirs()
+
+setwd("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/processed_acc_third_run")
+list.files()
+
+#allfiles<- list.files(pattern = ".csv")
+alldat <- read.csv("all_birds_HMMS.csv")
+
+freq <- seabiRds::getFrequency(alldat$time)
+
+names(alldat)
+plotlist<-list()
+for (i in unique(alldat$dep_id)) {
+  
+  
+ # bp <- alldat %>% 
+  #  filter(dep_id == i) %>% 
+   # dplyr::select(time, coldist, wbf, Depth, HMM) %>% 
+    #tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth')) %>% 
+    #ggplot2::ggplot(ggplot2::aes(x = HMM, y = value)) +
+    #ggplot2::geom_boxplot() +
+    #ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
+    #ggplot2::theme(text = element_text(size = 10))
+  
+  
+  tp <- alldat %>% 
+    filter(dep_id == i) %>% 
+    dplyr::select(time, coldist, wbf, Depth, odba, HMM) %>% 
+    dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))%>% 
+    tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth' )) %>% 
+    ggplot2::ggplot(ggplot2::aes(x = time, y = value)) +
+    ggplot2::geom_line() +
+    ggplot2::geom_point(ggplot2::aes(col = HMM)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
+    #ggplot2::theme(legend.position = c(0.10, 0.90),
+     #              legend.background = element_blank(),http://127.0.0.1:21349/graphics/34aace5a-7370-433b-a077-499b1150736b.png
+      #             legend.key = element_blank(),
+       #            text = element_text(size = 10))+
+    ggtitle(i)
+  
+  plotlist[[i]]<-tp
+  
+  #p <- cowplot::plot_grid(bp, tp)
+  #ggsave(paste0(i,'_plots_trials.png'), p, units = 'in', width = 10, height = 5)
+  
+ 
+}
+all_birds <- cowplot::plot_grid(plotlist =plotlist)
+ggsave("all_birds_plots_trials.png", all_birds,  units = 'in', width = 30, height = 15)
+
+#pick A09 as sample for pub
+i<-"A09PEBO_20191116_A31"
+
+tp <- alldat %>% 
+  filter(dep_id == i) %>% 
+  dplyr::select(time, coldist, wbf, Depth, odba, HMM) %>% 
+  dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))%>% 
+  tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth' )) %>% 
+  ggplot2::ggplot(ggplot2::aes(x = time, y = value)) +
+  ggplot2::geom_line() +
+  ggplot2::geom_point(ggplot2::aes(col = HMM)) +
+  ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
+  #ggplot2::theme(legend.position = c(0.10, 0.90),
+  #              legend.background = element_blank(),http://127.0.0.1:21349/graphics/34aace5a-7370-433b-a077-499b1150736b.png
+  #             legend.key = element_blank(),
+  #            text = element_text(size = 10))+
+  #ggtitle(i)+
+  scale_color_discrete(name = "Behaviour",
+                       labels = c("Colony (Coldist > 0.5 km)",
+                                  "Plunging (Depth > 0.5 m)",
+                                  "Resting (Coldist > 0.5 km, WBF < 4)",
+                                  "Flying (WBF > 4)"),
+                       breaks = c("Colony", "Foraging", "Resting", "Flying"))
+  theme_bw()
+
+ggsave(paste0(i,'_plots_pub.png'), tp, units = 'in', width = 20, height = 10)
