@@ -2,6 +2,8 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 
+#LUMPED HMMS FILES CAN BE LOADED IN LINE 63 !!!!!!!!!!!!!!!!!!!!!!!
+
 #summarize behaviours from PEBOs (or GUCOs)
 getwd()
 
@@ -12,9 +14,9 @@ setwd("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/
 #create a list of names of pre produced outputs from HMM and axxy data
 fn2<-list.files(pattern = ".csv")
 
-#idx <- grep("PEBO", fn2)
+idx <- grep("PEBO", fn2) # to select only summary files from HMM
 
-#fn2 <- fn2[idx]
+fn2 <- fn2[idx]
 
 
 #merge all birds HMM result data 
@@ -51,6 +53,16 @@ system.time({
   
 })
 
+#lumped HMM runs
+write.csv(all_birds, "all_birds_HMMS.csv")
+saveRDS(all_birds, "all_birds_HMMS.RDS")
+
+##
+##
+
+setwd("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/processed_acc_third_run")
+
+all_birds<-readRDS("all_birds_HMMS.RDS")
 
 
 #calculate the sampling time per BIRD, to merge later with the next summary!!!  
@@ -63,27 +75,27 @@ samptime <- all_birds %>%
     SampTime = as.numeric(- difftime(timestart, timeend), units = 'hours'))
   
 # some diftimes have been calculated with another bird
-all_birds[which(all_birds$diftime <0),]
+#all_birds[which(all_birds$diftime <0),]
 
-all_birds[34160:34170, ]          
+#all_birds[34160:34170, ]          
 
 sum1 <- all_birds %>% 
   group_by(HMM, dep_id) %>% 
   summarise(
     TotalTimeDay = sum(diftime, na.rm = TRUE),
-    TotalODBADay = sum(odba, na.rm = TRUE)
+    TotalDBADay = sum(odba, na.rm = TRUE)
   )
 
 
 sum1_1 <- sum1 %>%
   select("HMM","dep_id","TotalTimeDay") %>% 
   pivot_wider(names_from = HMM, values_from = TotalTimeDay) %>% 
-  rename(TimeColony = Colony, TimeFlying = Flying, TimeForaging = Foraging, TimeResting = Resting)
+  rename(TCol = Colony, TFly = Flying, TFor = Foraging, TRest = Resting)
   
 sum1_2 <- sum1 %>%
-  select("HMM","dep_id","TotalODBADay") %>% 
-  pivot_wider(names_from = HMM, values_from = TotalODBADay) %>% 
-  rename(ODBAColony = Colony, ODBAFlying = Flying, ODBAForaging = Foraging, ODBAResting = Resting)
+  select("HMM","dep_id","TotalDBADay") %>% 
+  pivot_wider(names_from = HMM, values_from = TotalDBADay) %>% 
+  rename(DBACol = Colony, DBAFly = Flying, DBAFor = Foraging, DBARest = Resting)
 
 merged_summed <- merge(sum1_1, sum1_2, by="dep_id", all=TRUE)
 
@@ -93,22 +105,26 @@ merged_summed <- merge(merged_summed, samptime, by="dep_id", all=TRUE)
 #extract variable names
 #vars1 <- merged_summed %>% select(c("TotalTimeDay", "TotalODBADay")) %>% names()
 
-vars1 <- c("TimeColony", "TimeFlying",  "TimeForaging", "TimeResting", "ODBAColony", "ODBAFlying", "ODBAForaging", "ODBAResting")
+vars1 <- c("TCol", "TFly",  "TFor", "TRest", "DBACol", "DBAFly", "DBAFor", "DBARest")
 
 merged_summed2<-merged_summed %>% 
   mutate(
-    across(all_of(vars1), ~.x/SampTime, .names ="{col}")#total time and ODBA of each activty divided by total Sampling time
+    across(all_of(vars1), ~.x/SampTime, .names = paste0("p","{col}"))#total time and ODBA of each activty divided by total Sampling time
   )
 
 
+##
+##
+##for plotting only
 
-merged_for_plots<-merge(sum1,  samptime, by="dep_id", all=TRUE)
+merged_for_plots<-merge(sum1, samptime, by="dep_id", all=TRUE)
 names(merged_for_plots)
-vars1 <- c( "TotalTimeDay","TotalODBADay")
+
+vars1 <- c( "TotalTimeDay","TotalDBADay")
 
 merged_for_plots<-merged_for_plots %>% 
   mutate(
-    across(all_of(vars1), ~.x/SampTime, .names ="{col}")#total time and ODBA of each activty divided by total Sampling time
+    across(all_of(vars1), ~.x/SampTime, .names =paste0("p","{col}"))#total time and ODBA of each activty divided by total Sampling time
   )
 
 
@@ -119,13 +135,26 @@ A<-ggplot(merged_for_plots, aes(x = HMM, y = TotalTimeDay, group = HMM, color = 
   xlab(NULL)+
   theme(axis.text.x=element_blank())
 
-B<-ggplot(merged_for_plots, aes(x = HMM, y = TotalODBADay, group = HMM, color =  HMM) )+
+B<-ggplot(merged_for_plots, aes(x = HMM, y = TotalDBADay, group = HMM, color =  HMM) )+
   geom_boxplot()+
   theme_bw()+
   theme(legend.position = "none")
 
 
-cowplot::plot_grid(A, B, nrow = 2)
+C<-ggplot(merged_for_plots, aes(x = HMM, y = pTotalTimeDay, group = HMM, color =  HMM) )+
+  geom_boxplot()+
+  theme_bw()+
+  theme(legend.position = "none")+
+  xlab(NULL)+
+  theme(axis.text.x=element_blank())
+
+D<-ggplot(merged_for_plots, aes(x = HMM, y = pTotalDBADay, group = HMM, color =  HMM) )+
+  geom_boxplot()+
+  theme_bw()+
+  theme(legend.position = "none")
+
+
+cowplot::plot_grid(A, B, C, D, nrow = 2)
 
 
 #save merged_summed2 for stats
