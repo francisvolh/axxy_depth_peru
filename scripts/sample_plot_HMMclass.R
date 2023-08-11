@@ -1,3 +1,7 @@
+library(dplyr)
+library(ggplot2)
+library(jpeg)
+library(patchwork)
 #Re-plotting third run for example on 1 bird
 
 getwd()
@@ -53,11 +57,11 @@ ggsave("all_birds_plots_trials.png", all_birds,  units = 'in', width = 30, heigh
 
 #pick A09 as sample for pub
 i<-"A09PEBO_20191116_A31"
-
 tp <- alldat %>% 
   filter(dep_id == i) %>% 
   dplyr::select(time, coldist, wbf, Depth, odba, HMM) %>% 
   dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))%>% 
+  dplyr::mutate(time = lubridate::with_tz(time, "America/Lima")) %>% 
   tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth' )) %>% 
   ggplot2::ggplot(ggplot2::aes(x = time, y = value)) +
   ggplot2::geom_line() +
@@ -73,7 +77,27 @@ tp <- alldat %>%
                                   "Plunging (Depth > 0.5 m)",
                                   "Resting (Coldist > 0.5 km, WBF < 4)",
                                   "Flying (WBF > 4)"),
-                       breaks = c("Colony", "Foraging", "Resting", "Flying"))
-  theme_bw()
+                       breaks = c("Colony", "Foraging", "Resting", "Flying"))+
+  theme_bw()+
+  theme(legend.position = "top")+ #c(0.75, 0.55) # could reposition with the coordinates
+  theme(legend.box.background = element_rect(color = "black")) #could remove the box line 
+tp
 
-ggsave(paste0(i,'_plots_pub.png'), tp, units = 'in', width = 20, height = 10)
+
+ggsave(paste0(i,'_plots_pubv2.png'), tp, units = 'in', width = 10, height = 8)
+
+
+plunge <- readJPEG("C:/Users/francis van oordt/Downloads/365328918_312005517941197_6014959739507994660_n.jpg",
+                   native = TRUE)
+colony <- readJPEG("C:/Users/francis van oordt/Downloads/364657304_1775269122878458_5968267506518036350_n.jpg",
+                   native = TRUE)
+tp + 
+  inset_element(plunge, left = 0.1,
+                bottom = 0.919,
+                right = 0.17,
+                top = .999) +
+  inset_element(colony, 
+                left = .4,
+                bottom = 0.7,
+                right = .3,
+                top = .8)
