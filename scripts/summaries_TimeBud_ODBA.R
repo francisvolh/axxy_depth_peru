@@ -72,7 +72,8 @@ samptime <- all_birds %>%
   summarise(
     timestart = head(time, n=1),
     timeend = tail(time, n=1),
-    SampTime = as.numeric(- difftime(timestart, timeend), units = 'hours'))
+    SampTime = as.numeric(- difftime(timestart, timeend), units = 'hours')) # sampling time based on the tracking device
+    #all sampling times match "time.total" from the dlw sheet except the the 100 hours bird dep which has a 74 h samp time, because the device shut down, but bird is eliminated after!
   
 # some diftimes have been calculated with another bird
 #all_birds[which(all_birds$diftime <0),]
@@ -124,7 +125,7 @@ vars1 <- c( "TotalTimeDay","TotalDBADay")
 
 merged_for_plots<-merged_for_plots %>% 
   mutate(
-    across(all_of(vars1), ~.x/SampTime, .names =paste0("p","{col}"))#total time and ODBA of each activty divided by total Sampling time
+    across(all_of(vars1), ~.x/SampTime, .names =paste0("p","{col}"))#total time and ODBA divided by total Sampling time
   )
 
 
@@ -159,7 +160,7 @@ cowplot::plot_grid(A, B, C, D, nrow = 2)
 
 #save merged_summed2 for stats
 
-write.csv(merged_summed2, "merged_summed2.csv")
+#write.csv(merged_summed2, "merged_summed2.csv")
 
 
 
