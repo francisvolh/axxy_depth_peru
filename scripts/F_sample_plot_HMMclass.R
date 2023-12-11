@@ -113,12 +113,12 @@ tp
 
 
 ### sample mapping attempt
-Peru <- sf::st_read(file.choose())
+Peru <- sf::st_read("C:/Users/francis van oordt/OneDrive - McGill University/Documents/Research/2021/Categorizacion 2020/chuita/gadm36_PER_shp/gadm36_PER_0.shp")
 #map_sample<- 
   one_bird<-alldat %>% 
   filter(dep_id == i) 
   
-  one_bird%>% 
+  one_bird_map <-one_bird%>% 
   dplyr::select(time, lon, lat, #coldist, wbf, Depth, odba, 
                 HMM) %>% 
   dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))%>% 
@@ -148,4 +148,9 @@ Peru <- sf::st_read(file.choose())
   theme(legend.position = "none")+ #c(0.75, 0.55) # could repositi#on with the coordinates
   theme(legend.box.background = element_rect(color = "black"))+
     ylab("Latitude")+
-    xlab("Longitude")#could remove the box line 
+    xlab("Longitude")+ 
+scale_x_continuous(breaks=c(-79.25, -79.15, -79))
+      one_bird_map
+  
+  ggsave(paste0('C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/one_bird_map.png'), one_bird_map, units = 'in', width = 4, height = 6)
+  
