@@ -31,6 +31,8 @@ calculations[which(calculations$Time.total <100),] %>%
 names(calculations)
 head(calculations)
 
+#####
+#visuals only
 #including outlier bird
 
 ggscatter(calculations[which(calculations$SampTime <70),], y = "DEE.kJ.d", #[which(calculations$SampTime <50),]
@@ -56,6 +58,8 @@ ggscatter(calculations[which(calculations$SampTime <70),], y = "DEE.KJ.d.g", #[w
                                 label.sep = "\n")#,
           #title = "DEE.KJ.d.g ~ Sampling time"
 )
+#####################################
+# Summaries for DEEg
 
 summary(calculations[ , c("DEE.KJ.d.g","DEE.kJ.d")])
 
@@ -89,7 +93,9 @@ for_S_summary <- df_to_pivot %>%
 
 #write.csv(for_S_summary, "DEE_summary_sex.csv")
 
+#####
 #checking for sex differences in DEEg
+
 dee.g.lm <- lm(data = calculations, DEE.KJ.d.g ~ sex)
 
 summary(dee.g.lm)
@@ -144,10 +150,11 @@ ggplot(data = calculations)+ #, color = Spec
   guides(color = "none")+
   theme_bw()
 
-####
+######
 #### MUST DO bird has not a full axxy cycle
 ####
 #eliminate bird A06
+
 calculations <- calculationsraw_s %>% 
   filter(!Time.total > 100) #getting rid of 
 
@@ -191,6 +198,7 @@ reg4 <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTRest +  pTFlyFo
 
 reg4i <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTFFR + 0)
 
+#model not accurate with no zero intercept
 #reg1i <- lm(data = calculations, formula = DEE.KJ.d.g ~ TCol)
 #reg1ii <- lm(data = calculations, formula = DEE.KJ.d.g ~  TFly)
 #reg1iii <- lm(data = calculations, formula = DEE.KJ.d.g ~ TFor)
@@ -347,9 +355,7 @@ predic.two.models <- cowplot::plot_grid(mod_pred1_A_PLOT, mod_pred_1B_PLOT)
 #ggsave("plots/predic.twoPar.models.png", predic.two.models, dpi = 300, bg = "white", units = 'in', width = 15, height = 6)
 
 ##############################################################
-
 #alternative 2 for model prediction graph with both terms together
-
 ### NOT IN THE PAPER
 mod_pred_2<-ggeffects::ggpredict(
   reg7,
@@ -381,7 +387,7 @@ mod_pred_2_PLOT
 #)
 
 
-### ### ### ### ### ### ### ### ### ### ### ### 
+######## 
 ### predicted vs actual values scatter plots
 
 #best model parametrized
@@ -444,11 +450,11 @@ E
 cowplot::plot_grid(E, C, D, labels = c("A", "B", 
                                        "C"), nrow = 1)
 
-plot_predictionsFull <- cowplot::plot_grid(C, D, labels = c("A", "B", "C"), nrow = 1)
+plot_predictionsFull <- cowplot::plot_grid(E, C, D, labels = c("A", "B", "C"), nrow = 1)
 
 #ggsave("plots/plot_predictionsFull.png", plot_predictionsFull, units = 'in', width = 22.5, height = 6)
 
-  
+#####
 #for for each parameter of the best model  DONE DIRECTLHY WITH PLOT from GGPrEDICT above
 
 #A <- ggscatter(calculations, y = "DEE.KJ.d.g", x = "dpDBACol",
@@ -479,12 +485,12 @@ plot_predictionsFull <- cowplot::plot_grid(C, D, labels = c("A", "B", "C"), nrow
 
 
 ################## 
-#summaries of Time budgets per activity and
+#SUMMARIES of Time budgets per activity and
 ### activity specific energy expenditure
 
 #in both cases for models with Fly and For(plunging) merged!
 
-# time budgets
+# TIME BUDGETS ALL BIRDS
 #reg1 <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTFly + pTFor + pTRest + 0)
 reg4 <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTRest +  pTFlyFor + 0)
 
@@ -512,7 +518,7 @@ timemerge$DEEactivity <- timemerge$`reg4$coefficients`*timemerge$MeanTime
 
 
 
-write.csv(timemerge, "TimesummariesFINAL.csv")
+#write.csv(timemerge, "TimesummariesFINAL.csv")
 
 reg4$coefficients[ c("pTFlyFor")]
 
@@ -612,7 +618,7 @@ DBAsummaries <- calculations %>%
 dbamerge<-merge(DBAsummaries, dbacoefs, by.x = c("dpDBA"), by.y = c("activity"))
 dbamerge$DEEactivity <- dbamerge$`reg8$coefficients`*dbamerge$MeanDBA
 
-write.csv(dbamerge,file ="DBAsummariesFINAL.csv")
+#write.csv(dbamerge,file ="DBAsummariesFINAL.csv")
 
 DBAsummaries <- calculations %>% 
   select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) %>% 
@@ -626,7 +632,7 @@ DBAsummaries <- calculations %>%
   )
 
 
-write.csv(DBAsummaries,file ="DBAsummaries4ParamFINAL.csv")
+#write.csv(DBAsummaries,file ="DBAsummaries4ParamFINAL.csv")
 
 
 #not in paper
@@ -650,8 +656,10 @@ ggplot(data = test_DBAcats)+
 
 #######################################################################################
 #######################################################################################
-######### MALE AND FEMALE CALCS ### NOT ON PAPER
+######### MALE AND FEMALE CALCS ### 
 #######################################################################################
+
+#####
 #look into sex differences
 
 ggscatter(calculationsraw_s, y = "DEE.KJ.d.g", 
@@ -712,10 +720,10 @@ Mmods_full.df$names<-rownames(Mmods_full.df)
 Mmods_full.df <- merge( x = Mmods_full.df, y = model_namesdf, by.x = "names", by.y ="name" )
 Mmods_full.df <- Mmods_full.df[order(Mmods_full.df$delta),]
 
-write.csv(Mmods_full.df,"C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Mfull.csv")
+#write.csv(Mmods_full.df,"C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Mfull.csv")
 
 calculations$predicted1<-predict(reg2, newdata = calculations[ , c("TColRest","TFly","TFor")])
-
+#####
 ggscatter(calculations, y = "DEE.KJ.d.g", 
           x = "predicted1",
           color = "black", shape = 21, #size = 3, # Points color, shape and size
@@ -728,7 +736,7 @@ ggscatter(calculations, y = "DEE.KJ.d.g",
           title = "Males DEE.KJ.d.g and Pred DBAColRest DBAFlyFor (with outlier)"
 )
 
-
+#####
 ################################ FEMALES
 
 calculations <- calculationsraw_s %>% 
@@ -777,10 +785,11 @@ Fmods_full.df <- merge( x = Fmods_full.df, y = model_namesdf, by.x = "names", by
 
 Fmods_full.df <- Fmods_full.df[order(Fmods_full.df$delta),]
 
-write.csv(Fmods_full.df,"C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Ffull.csv")
+#write.csv(Fmods_full.df,"C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Ffull.csv")
 
 calculations$predicted1<-predict(reg3, newdata = calculations[ , c("TColRest","TFlyFor")])
 
+#####
 ggscatter(calculations, y = "DEE.KJ.d.g", 
           x = "predicted1",
           color = "black", shape = 21, #size = 3, # Points color, shape and size
@@ -863,7 +872,7 @@ calculations %>%
   facet_wrap(~sex)+
   theme_bw()
 
-#point plots mean daily DBA activiy
+#point plots mean daily DBA activiy, split sexes
 calculations %>% 
   select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) %>% 
   pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") %>% 
@@ -879,7 +888,7 @@ calculations %>%
   theme(axis.text.x = element_blank())
 
 
-#point plots mean Time budget per activiy
+#point plots mean Time budget per activiy, split sexes
 calculations %>% 
   select(dep_id, pTCol,pTFly,pTFor,pTRest, sex) %>% 
   pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal") %>% 
@@ -895,7 +904,7 @@ calculations %>%
   theme(axis.text.x = element_blank())
 
 
-#boxplots mean daily DBA per activity
+#boxplots mean daily DBA per activity, split sexes
 DBAbox <- calculations %>% 
   select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) %>% 
   pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") %>% 
