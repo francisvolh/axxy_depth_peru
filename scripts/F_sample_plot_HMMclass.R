@@ -68,9 +68,10 @@ i<-"A09PEBO_20191116_A31"
 tp <- alldat %>% 
   filter(dep_id == i) %>% 
   dplyr::select(time, coldist, wbf, Depth, odba, HMM) %>% 
+  dplyr::rename(depth = Depth) %>%
   dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))%>% 
   dplyr::mutate(time = lubridate::with_tz(time, "America/Lima")) %>% 
-  tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth' )) %>% 
+  tidyr::pivot_longer(cols = c('coldist', 'wbf', 'depth' )) %>% 
   ggplot2::ggplot(ggplot2::aes(x = time, y = value), color = cbbPalette) +
   ggplot2::geom_line() +
   ggplot2::geom_point(ggplot2::aes(col = HMM)) +
@@ -82,10 +83,10 @@ tp <- alldat %>%
   #ggtitle(i)+
   scale_colour_manual(values=cbPalette,
                       name = "Behaviour",
-                      labels = c("Colony (Coldist < 1 km)",
-                                 "Flying (WBF > 4)",
-                                 "Plunging (Depth > 0.5 m)",
-                                 "Resting (Coldist > 1 km, WBF < 4)"),
+                      labels = c("Colony (coldist < 1 km)",
+                                 "Flying (wbf > 4)",
+                                 "Plunging (depth > 0.5 m)",
+                                 "Resting (coldist > 1 km, WBF < 4)"),
                       breaks = c("Colony", "Flying", "Foraging", "Resting"))+
   theme_bw()+
   theme(legend.position = "top")+ #c(0.75, 0.55) # could reposition with the coordinates
@@ -151,6 +152,8 @@ Peru <- sf::st_read("C:/Users/francis van oordt/OneDrive - McGill University/Doc
     xlab("Longitude")+ 
 scale_x_continuous(breaks=c(-79.25, -79.15, -79))
       one_bird_map
-  
   ggsave(paste0('C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/one_bird_map.png'), one_bird_map, units = 'in', width = 4, height = 6)
-  
+merge_class_plots <- cowplot::plot_grid(tp,one_bird_map, nrow = 1, labels = c('A', 'B'), rel_widths = c(1.75, 1))
+
+ggsave(paste0('C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/merge_class_plots.png'), 
+       merge_class_plots, units = 'in', width = 16, height = 6, bg = "white")
