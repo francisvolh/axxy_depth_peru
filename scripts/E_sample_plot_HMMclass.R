@@ -4,20 +4,21 @@ library(jpeg)
 library(patchwork)
 #Re-plotting third run for example on 1 bird
 
-getwd()
+#getwd()
 #list.dirs()
 
-setwd("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/processed_acc_third_run")
+#setwd("C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/processed_acc_third_run")
 #list.files()
 
 #allfiles<- list.files(pattern = ".csv")
-alldat <- read.csv("all_birds_HMMS.csv")
+alldat <- read.csv("data/processed_acc_third_run/all_birds_HMMS.csv")
 
 #alldat$time<- as.POSIXct(alldat$time)
 
 #freq <- seabiRds::getFrequency(alldat$time)
 
-names(alldat)
+#plot all birds to check which is a good example - NOT NEEDED FOR THE PUB
+{names(alldat)
 plotlist<-list()
 for (i in unique(alldat$dep_id)) {
   
@@ -54,8 +55,10 @@ for (i in unique(alldat$dep_id)) {
   
  
 }
+
 all_birds <- cowplot::plot_grid(plotlist =plotlist)
-ggsave("all_birds_plots_trials.png", all_birds,  units = 'in', width = 30, height = 15)
+}
+#ggsave("all_birds_plots_trials.png", all_birds,  units = 'in', width = 30, height = 15)
 
 #pick A09 as sample for pub
 ###################################################################################################
@@ -65,36 +68,45 @@ ggsave("all_birds_plots_trials.png", all_birds,  units = 'in', width = 30, heigh
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 i<-"A09PEBO_20191116_A31"
-tp <- alldat %>% 
-  filter(dep_id == i) %>% 
-  dplyr::select(time, coldist, wbf, Depth, odba, HMM) %>% 
-  dplyr::rename(depth = Depth) %>%
-  dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))%>% 
-  dplyr::mutate(time = lubridate::with_tz(time, "America/Lima")) %>% 
-  tidyr::pivot_longer(cols = c('coldist', 'wbf', 'depth' )) %>% 
+tp <- alldat |> 
+  dplyr::filter(dep_id == i) |> 
+  dplyr::select(time, "Distance to the colony" = coldist, "Wing beat frequency"= wbf, Depth, odba, HMM) |>
+ # dplyr::rename(depth = Depth)|>
+  dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))|> 
+  dplyr::mutate(time = lubridate::with_tz(time, "America/Lima")) |>
+  tidyr::pivot_longer(cols = c('Distance to the colony', 'Wing beat frequency', 'Depth' )) |>
   ggplot2::ggplot(ggplot2::aes(x = time, y = value), color = cbbPalette) +
   ggplot2::geom_line() +
   ggplot2::geom_point(ggplot2::aes(col = HMM)) +
-  ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
+  ggplot2::ylab(NULL)+
+  ggplot2::xlab(NULL)+
+  ggplot2::facet_grid(rows = ggplot2::vars(name), 
+                      scales = 'free',  
+                      switch = "y") +
   #ggplot2::theme(legend.position = c(0.10, 0.90),
   #              legend.background = element_blank(),http://127.0.0.1:21349/graphics/34aace5a-7370-433b-a077-499b1150736b.png
   #             legend.key = element_blank(),
   #            text = element_text(size = 10))+
   #ggtitle(i)+
-  scale_colour_manual(values=cbPalette,
-                      name = "Behaviour",
-                      labels = c("Colony (coldist < 1 km)",
-                                 "Flying (wbf > 4)",
-                                 "Plunging (depth > 0.5 m)",
-                                 "Resting (coldist > 1 km, WBF < 4)"),
+  ggplot2::scale_colour_manual(values=cbPalette,
+                      name = NULL,
+                      labels = c("Colony (Dist. to col. < 1 km)",
+                                 "Flying (WBF > 4)",
+                                 "Plunging (Depth > 0.5 m)",
+                                 "Resting (Dist. to col. > 1 km, WBF < 4)"),
                       breaks = c("Colony", "Flying", "Foraging", "Resting"))+
-  theme_bw()+
-  theme(legend.position = "top")+ #c(0.75, 0.55) # could reposition with the coordinates
-  theme(legend.box.background = element_rect(color = "black")) #could remove the box line 
+  
+  ggplot2::theme_bw()+
+  ggplot2::theme( legend.text=ggplot2::element_text(size=14),
+                  text= ggplot2::element_text(size=16),
+                  legend.position = "top"#,
+                 #legend.box.background = ggplot2::element_rect(color = "black")
+                 ) #c(0.75, 0.55) # could reposition with the coordinates
+   #could remove the box line 
 tp
 
 
-#ggsave(paste0('C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/',i,'_plots_pubv2.png'), tp, units = 'in', width = 10, height = 8)
+#ggplot2::ggsave(paste0('C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/',i,'_plots_pubv3.png'), tp, units = 'in', width = 10, height = 8)
 
 
 #plunge <- readJPEG("C:/Users/francis van oordt/Downloads/365328918_312005517941197_6014959739507994660_n.jpg",
@@ -114,21 +126,21 @@ tp
 
 
 ### sample mapping attempt
-Peru <- sf::st_read("C:/Users/francis van oordt/OneDrive - McGill University/Documents/Research/2021/Categorizacion 2020/chuita/gadm36_PER_shp/gadm36_PER_0.shp")
+Peru <- sf::st_read("C:/Users/francis van oordt/Documents/Research/2021/Categorizacion 2020/chuita/gadm36_PER_shp/gadm36_PER_0.shp")
 #map_sample<- 
-  one_bird<-alldat %>% 
-  filter(dep_id == i) 
+  one_bird<-alldat |>
+  dplyr::filter(dep_id == i) 
   
-  one_bird_map <-one_bird%>% 
+  one_bird_map <-one_bird |>
   dplyr::select(time, lon, lat, #coldist, wbf, Depth, odba, 
-                HMM) %>% 
-  dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))%>% 
-  dplyr::mutate(time = lubridate::with_tz(time, "America/Lima")) %>% 
+                HMM)|>
+  dplyr::mutate(time = as.POSIXct(time, tz = 'UTC', format = "%Y-%m-%d %H:%M:%S"))|> 
+  dplyr::mutate(time = lubridate::with_tz(time, "America/Lima")) |> 
   #tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth')) %>% 
   ggplot2::ggplot()+
-  ggplot2::geom_path(aes(x = lon, y = lat)) +
-  ggplot2::geom_point(data = one_bird[which(one_bird$HMM != "Flying"),], aes(x = lon, y = lat, color = HMM))+
-  ggplot2::geom_sf(data = Peru, aes())+
+  ggplot2::geom_path(ggplot2::aes(x = lon, y = lat)) +
+  ggplot2::geom_point(data = one_bird[which(one_bird$HMM != "Flying"),], ggplot2::aes(x = lon, y = lat, color = HMM))+
+  ggplot2::geom_sf(data = Peru)+
   #ggplot2::geom_point(ggplot2::aes(col = HMM)) +
   
   #ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
@@ -137,23 +149,38 @@ Peru <- sf::st_read("C:/Users/francis van oordt/OneDrive - McGill University/Doc
   #             legend.key = element_blank(),
   #            text = element_text(size = 10))+
   #ggtitle(i)+
-  scale_colour_manual(values=cbPalette,
+  ggplot2::scale_colour_manual(values=cbPalette,
                       name = "Behaviour",
                       labels = c("Colony (Coldist < 1 km)",
                                  "Flying (WBF > 4)",
                                  "Plunging (Depth > 0.5 m)",
                                  "Resting (Coldist > 1 km, WBF < 4)"),
                       breaks = c("Colony", "Flying", "Foraging", "Resting"))+
-  theme_bw()+
-  coord_sf( xlim = range(alldat[which(alldat$dep_id == i),]$lon), ylim= range(alldat[which(alldat$dep_id == i),]$lat))+
-  theme(legend.position = "none")+ #c(0.75, 0.55) # could repositi#on with the coordinates
-  theme(legend.box.background = element_rect(color = "black"))+
-    ylab("Latitude")+
-    xlab("Longitude")+ 
-scale_x_continuous(breaks=c(-79.25, -79.15, -79))
-      one_bird_map
-  ggsave(paste0('C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/one_bird_map.png'), one_bird_map, units = 'in', width = 4, height = 6)
+    ggplot2::theme_bw()+
+    ggplot2::coord_sf( xlim = range(alldat[which(alldat$dep_id == i),]$lon), ylim= range(alldat[which(alldat$dep_id == i),]$lat))+
+    ggplot2::theme( 
+        text= ggplot2::element_text(size=15),
+        legend.position = "none")+ #c(0.75, 0.55) # could repositi#on with the coordinates
+
+    ggplot2::ylab(NULL)+
+    ggplot2::xlab(NULL)+ 
+    ggplot2::scale_x_continuous(breaks=c(-79.25, -79.15, -79))+
+    ggsn::scalebar(x.min = range(alldat[which(alldat$dep_id == i),]$lon)[1],
+                   x.max = range(alldat[which(alldat$dep_id == i),]$lon)[2],
+                   y.min = range(alldat[which(alldat$dep_id == i),]$lat)[1],
+                   y.max = range(alldat[which(alldat$dep_id == i),]$lat)[2], 
+                   dist = 5, transform = TRUE, model = "WGS84", 
+                   dist_unit = "km", 
+                   location = "bottomleft")+
+    ggplot2::annotate("text", x = -79.225, y = -8.15, label = "PACIFIC OCEAN", angle='-45', size = 6)+
+  ggplot2::annotate("text", x = -79., y = -8.125, label = "PERU", size = 6)
+  
+one_bird_map
+
+#ggplot2::ggsave(paste0('C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/one_bird_mapv2.png'), one_bird_map, units = 'in', width = 4, height = 6)
+
+  
 merge_class_plots <- cowplot::plot_grid(tp,one_bird_map, nrow = 1, labels = c('A', 'B'), rel_widths = c(1.75, 1))
 
-ggsave(paste0('C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/merge_class_plots.png'), 
-       merge_class_plots, units = 'in', width = 16, height = 6, bg = "white")
+ggplot2::ggsave(paste0('C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/plots/merge_class_plotsv2.png'), 
+       merge_class_plots, units = 'in', width = 19, height = 9, bg = "white")
