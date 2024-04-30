@@ -1,5 +1,12 @@
 #!/usr/bin/env Rscript
 
+#code writen to run in the command line in bash, 3 birds at a time
+# DBA window of 3 secs, mean of 1 second, and sliced at 1 second before HMMs
+
+dba_wind <- 3
+dba_mean <- 1
+wbf_wind <-30
+hmm_slice <- 1
 my.args <- commandArgs(trailingOnly = TRUE) #be careful in the future with ARGUMENTS (eg. A01... A11)that dont match the logger ID name!!!
 
 
@@ -87,31 +94,32 @@ birds3 <- NULL
   
 for (i in 1:length(dep$dep_id) ) { #loop over only 3 birds
   
-  dd <- dep$dep_id[i]
+  dd <- dep$dep_id[i] # grabs a bird from the dep sheet, which may contain all deployed birds of the season
   
   
   idx <- grep(dd, bird3_list)
   
-  if(!identical(idx, integer(0))){
+  if(!identical(idx, integer(0))){ # checks if the Axxy file for the dep sheet bird is present and runs, if not, goes to next
     print(paste('Start:', dd, 'at', format(Sys.time(), "%T")))
     
     #dat <- vroom(fn[idx], col_types= "c?nnncnnnnnndnnn", delim = ',') #reads fast but next steps are slower it seems
+    print(paste("Started reading bird", my.args[i], "at", Sys.time()))
     
     dat<-read.csv(bird3_list[idx], stringsAsFactors = FALSE, sep = ",")
     
-    dat <- dat %>% 
+    dat <- dat |> 
       dplyr::mutate(
         dep_id = dd,
         time = as.POSIXct(Timestamp, tz = 'UTC', format = "%d/%m/%Y %H:%M:%OS") 
-      ) %>% 
-      dplyr::select(dep_id, time, X, Y, Z, location.lon, location.lat, Depth) %>% 
-      dplyr::rename(x = X, y = Y, z = Z, lon = location.lon, lat = location.lat) %>% 
+      ) |> 
+      dplyr::select(dep_id, time, X, Y, Z, location.lon, location.lat, Depth) |> 
+      dplyr::rename(x = X, y = Y, z = Z, lon = location.lon, lat = location.lat) |> 
       dplyr::filter(time > dep$time_released[dep$dep_id == dd],
                     time < dep$time_recaptured[dep$dep_id == dd])
     
-    freq <- seabiRds::getFrequency(dat$time)
+    freq <- seabiRds::getFrequency(dat$time) # calculates the sampling rate of the axxy for each bird
     
-    dat <- dat %>% 
+    dat <- dat |> 
       dplyr::mutate(
         lon = imputeTS::na_interpolation(lon),
         lat = imputeTS::na_interpolation(lat),
@@ -119,18 +127,19 @@ for (i in 1:length(dep$dep_id) ) { #loop over only 3 birds
                                        colonyLon = dep$dep_lon[dep$dep_id == dd],
                                        colonyLat = dep$dep_lat[dep$dep_id == dd]),
         wbf = seabiRds::getPeakFrequency(data = z, time = time, method = 'fft',
-                                         window = 30,
+                                         window = wbf_wind,
                                          maxfreq = 10, ###set to 6
                                          threshold = 0.2,
                                          sample = 1),
         #### add step length as variable, but would need to interpolate CORRECTLY crawl (or ex-foisgrass)
-        odba = seabiRds::getDBA(X = x, Y = y, Z = z, time = time, window = 60),
-        odba = zoo::rollmean(odba, k =  60 * freq, fill = NA, na.rm = T),
-        Pitch = seabiRds::getPitch(X = x, Y = y, Z = z, time = time, window = 1),
+        odba = seabiRds::getDBA(X = x, Y = y, Z = z, time = time, window = dba_wind),
+        odba = zoo::rollmean(odba, k =  dba_mean * freq, fill = NA, na.rm = T),
+        #Pitch = seabiRds::getPitch(X = x, Y = y, Z = z, time = time, window = 1),
         Depth = imputeTS::na_interpolation(Depth), 
-      ) %>% slice(seq(1, nrow(dat), freq*5)) ### make average by minute instead of slicing
+      ) |> slice(seq(1, nrow(dat), freq*hmm_slice)) ### make average by minute instead of slicing
     
     dat<-seabiRds::filterSpeed(dat, lon = "lon", lat="lat", time="time", threshold = 101)
+    print(paste("Finished reading bird", my.args[i], "at", Sys.time()))
     
    birds3 <- rbind(birds3, dat)
     
@@ -138,19 +147,21 @@ for (i in 1:length(dep$dep_id) ) { #loop over only 3 birds
   
   
 }
+print(paste("Finished joining 3 birds", my.args[1], my.args[2], my.args[3], "at", Sys.time()))
 
 #### split processing and HMM into different loops
 
-d <- birds3 %>% 
-  dplyr::select(dep_id, time, lon, lat, coldist, wbf, odba, Depth) %>% 
-  rename(ID = dep_id) %>% 
-  prepData(type = "LL", coordNames = c("lon", "lat")) %>% 
+d <- birds3 |> 
+  dplyr::select(dep_id, time, lon, lat, coldist, wbf, odba, Depth) |> 
+  rename(ID = dep_id) |> 
+  prepData(type = "LL", coordNames = c("lon", "lat")) |> 
   mutate(
     colony = ifelse(coldist < 1, 1, 0), #could be parameter mindist
     wbf = ifelse(wbf < 2, 0, wbf),
     diving = ifelse(Depth > 0.5, 1, 0)#could be paramerte mindepth
   )
 
+print(paste("Prepped data at", Sys.time()))
 
 m <- fitHMM(data=d,
             nbStates=nbStates,
@@ -165,31 +176,32 @@ birds3$HMM <- factor(birds3$HMM, labels = stateNames)
 saveRDS(m, paste0(out_dir, '/', paste0(my.args[1],"_",my.args[2],"_", my.args[3]),'_HMM.RDS'))
 write.csv(birds3, paste0(out_dir, '/', paste0(my.args[1],"_",my.args[2],"_", my.args[3]),'.csv'), row.names = F)
 
+print(paste("Saved HMM model output at", Sys.time()))
 
 for (i in unique(birds3$dep_id)){
   
-  bp <- birds3 %>%
-    filter(dep_id == i) %>% 
-    dplyr::select(time, coldist, wbf, Depth, HMM) %>% 
-    tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth')) %>% 
+  bp <- birds3 |>
+    filter(dep_id == i) |> 
+    dplyr::select(time, coldist, wbf, Depth, HMM) |> 
+    tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth')) |> 
     ggplot2::ggplot(ggplot2::aes(x = HMM, y = value)) +
     ggplot2::geom_boxplot() +
     ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
     ggplot2::theme(text = element_text(size = 10))
   
   
-  tp <- birds3 %>% 
-    filter(dep_id == i) %>% 
-    dplyr::select(time, coldist, wbf, Depth, odba, HMM) %>% 
-    tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth' )) %>% 
+  tp <- test |> 
+    #filter(dep_id == i) |> 
+    dplyr::select(time, coldist, wbf, Depth, odba, HMM) |> 
+    tidyr::pivot_longer(cols = c('coldist', 'wbf', 'Depth' )) |>
     ggplot2::ggplot(ggplot2::aes(x = time, y = value)) +
     ggplot2::geom_line() +
     ggplot2::geom_point(ggplot2::aes(col = HMM)) +
-    ggplot2::facet_grid(rows = ggplot2::vars(name), scales = 'free') +
+    ggplot2::facet_wrap(rows = ggplot2::vars(name), scales = 'free') +
     ggplot2::theme(legend.position = c(0.10, 0.90),
-                   legend.background = element_blank(),
-                   legend.key = element_blank(),
-                   text = element_text(size = 10))
+                   legend.background = ggplot2::element_blank(),
+                   legend.key = ggplot2::element_blank(),
+                   text = ggplot2::element_text(size = 10))
   
   p <- cowplot::plot_grid(bp, tp)
   ggsave(paste0(out_dir, '/', i,'_plots.png'), p, units = 'in', width = 10, height = 5)
