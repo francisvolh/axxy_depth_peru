@@ -35,7 +35,9 @@ locs_sf <- sf::st_transform(locs_sf, crs = 5387) ##
 
 
 
-# make tracks
+# make tracks, 
+#need to keep the data as lat lon (so not transform to porjected coordinates from the previous line)
+
 tracks_sf <- locs_sf |> 
   dplyr::group_by(dep_id) |> 
   dplyr::summarize(
@@ -136,7 +138,7 @@ fn <- list.files('C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap
 #fn <-  fn[-stringr::str_detect(fn, 'G')]
 
 
-# get axxy metrics (takes about 2.5 hours)
+# get axxy metrics (takes about 5 hours) -- produced in DRA in 25 minutes, 7 cores 3 birds per core
 {
   
   dba_wind <- 3
@@ -231,8 +233,8 @@ saveRDS(data, 'C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 
 ################################## load re run files from DRA 
 rds_files <-list.files("C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/new HMM classification run 3 prop dive/",
                        pattern = ".RDS")
-rds_files<-rds_files[-grep("hmm", rds_files)]
-rds_files<-rds_files[-grep("processed", rds_files)]
+#rds_files<-rds_files[-grep("hmm", rds_files)]
+#rds_files<-rds_files[-grep("processed", rds_files)]
 
 data_compiled<- data.frame()
 for (i in rds_files) {
@@ -282,10 +284,10 @@ saveRDS(hmmData, 'C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap
 for (d in unique(hmmData$ID)) {
   p <- hmmData |> 
     dplyr::filter(ID == d) |> 
-    dplyr::select(ID, time, coldist, coldist2, step, vedba, vedba.sum, Depth, pT_dive, #pitch, 
+    dplyr::select(ID, time, coldist, coldist2, step, vedba.q, vedba.sum, Depth, pT_dive, #pitch, 
                   wbf
     ) |> 
-    tidyr::pivot_longer(cols = c(coldist2, coldist, step, vedba, vedba.sum, Depth, pT_dive, #pitch, 
+    tidyr::pivot_longer(cols = c(coldist2, coldist, step, vedba.q, vedba.sum, Depth, pT_dive, #pitch, 
                                  wbf
     )) |> 
     ggplot2::ggplot(ggplot2::aes(x = time, y = value)) +
@@ -447,3 +449,62 @@ for (i in unique(hmmData$ID)){
   print(paste("Finished", i, "at", format(Sys.time(), "%T")))
   
 }
+
+coords_utm<-hmmData[,c("x", "y")]
+coords_utm <- sf::st_as_sf(coords_utm, coords = c('x', 'y'), crs = 5387) ## I am not reprojecting because this is the tropics
+coords_latlon<- sf::st_transform(coords_utm,  crs =4326)
+
+
+## INCORPORATE DAY AND NIGHT categories and Calculate DBA in the colony for each 
+#move package old style to define day and night
+elev<-solartime::computeSunPosition(lubridate::with_tz(hmmData$time, "America/Lima"), sf::st_coordinates(coords_latlon)[,2],sf::st_coordinates(coords_latlon)[,1])[,'elevation']
+hist(elev)
+DayNight <- c("Night",'Day')[1+(elev>0)]
+table(DayNight)
+hmmData$DayNight <- DayNight
+unique(hmmData$ID)
+
+hmmData|>
+  dplyr::filter(ID == unique(hmmData$ID)[7])|>
+  dplyr::mutate(
+    time = lubridate::with_tz(time, "America/Lima")
+  )|>
+  ggplot2::ggplot()+
+  ggplot2::geom_point(ggplot2::aes(x = time, y = coldist2, color = as.factor(DayNight)))+
+  ggplot2::scale_x_datetime(date_breaks = "1 hours")+
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+  
+data_comp <-hmmData|>
+  dplyr::as_tibble()|>
+  dplyr::filter(behaviour == "Colony") |>
+  dplyr::group_by(ID)|>
+  dplyr::summarise(
+    DBAdayCol = sum(vedba.sum[which(DayNight == "Day")])/length(DayNight[DayNight == "Day"])/60,
+    timeDay = length(DayNight[DayNight == "Day"])/60,
+    DBAnightCol = sum(vedba.sum[which(DayNight == "Night")])/length(DayNight[DayNight == "Night"])/60,
+    timeNight = length(DayNight[DayNight == "Night"])/60
+  )|>
+  tidyr::pivot_longer( cols = c("DBAdayCol", "DBAnightCol"), names_to = "DBAcat", values_to = "DBAvalue")
+
+summary(lm( data = data_comp, DBAvalue ~ DBAcat))
+
+
+hmmData|>
+  dplyr::as_tibble()|>
+  dplyr::filter(behaviour == "Colony") |>
+  dplyr::group_by(ID)|>
+  dplyr::summarise(
+    DBAdayCol = sum(vedba.sum[which(DayNight == "Day")])/length(DayNight[DayNight == "Day"])/60,
+    timeDay = length(DayNight[DayNight == "Day"])/60,
+    DBAnightCol = sum(vedba.sum[which(DayNight == "Night")])/length(DayNight[DayNight == "Night"])/60,
+    timeNight = length(DayNight[DayNight == "Night"])/60
+  )|>
+  tidyr::pivot_longer( cols = c("DBAdayCol", "DBAnightCol"), names_to = "DBAcat", values_to = "DBAvalue")|>
+  ggplot2::ggplot()+
+  ggplot2::geom_point(ggplot2::aes(x = DBAcat, y = DBAvalue), 
+                      position =  ggplot2::position_jitter(width = 0.2))+
+  ggplot2::xlab(NULL)+
+  ggplot2::ylab("Hourly DBA at the colony")+
+  ggplot2::scale_x_discrete(labels = c("Day", "Night"))+
+  ggplot2::theme_bw()
