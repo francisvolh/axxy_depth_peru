@@ -43,7 +43,16 @@ multispp_plot_fightCost<-flights|>
   ggplot2::theme_bw()+
   ggplot2::geom_smooth(ggplot2::aes(x = Body.mass..g., y = Metabolic.rate..W.),color = "black", method= "lm")+
   ggplot2::scale_color_manual( values = c25)+
-  ggplot2::geom_text(check_overlap = TRUE)+
+  #ggplot2::geom_text(check_overlap = TRUE)+
+  ggplot2::geom_point(data = flights[which(flights$Species == "Peruvian booby"),], 
+                      ggplot2::aes(x = log10(Body.mass..g.), 
+                                   y = log10(Metabolic.rate..W.)
+                      ), cex = 5, color = "blue", fill="green", shape = 23)+
+  
+  ggrepel::geom_text_repel(ggplot2::aes(x = Body.mass..g., 
+                               y = Metabolic.rate..W., 
+                               label = Species), 
+                           box.padding = 0.5)+
   ggplot2::theme(legend.position = "none")+
   ggplot2::xlab("Log Body mass (g)")+
   ggplot2::ylab("Log Metabolic Rate (W)")+
@@ -52,4 +61,4 @@ multispp_plot_fightCost<-flights|>
 
 multispp_plot_fightCost
 setwd("C:/Users/francis van oordt/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/")
-ggplot2::ggsave(multispp_plot_fightCost, filename = "plots/multispp_plot_fightCost.png", dpi = 300, width =9 , height = 5.55)
+ggplot2::ggsave(multispp_plot_fightCost, filename = "plots/multispp_plot_fightCost.png", dpi = 300, width =9 , height = 6.55)
