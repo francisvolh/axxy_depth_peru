@@ -459,9 +459,15 @@ C <- ggpubr::ggscatter(calculations, y = "DEE.KJ.d.g",
                                label.sep = "\n"),
          title = NULL,
          #xlab = "DEE (kJ/d*g) from model (DBA col + DBA away)",
-         ylab = FALSE
+         ylab = FALSE,
+         fullrange = TRUE
 )+
-  ggplot2::labs(x= expression("Predictted DEE (kJ/d*g) from model DBA"[italic(col)]+"DBA"[italic("com+for+rest")]))
+  ggplot2::annotation_custom(
+    grid::linesGrob(gp = grid::gpar(col = 'blue', lty = 2, lwd = 3)))+
+  ggplot2::labs(x= expression("Predictted DEE (kJ/d*g) from model DBA"[italic(col)]+"DBA"[italic("com+for+rest")]))+
+  ggplot2::scale_y_continuous(breaks = c(1, 1.5))+
+  ggplot2::xlim(range(calculations$DEE.KJ.d.g))#+
+  #ggplot2::coord_fixed(ratio = 1)
 
 C
 
@@ -480,9 +486,15 @@ D <- ggpubr::ggscatter(calculations, y = "DEE.KJ.d.g",
                                     label.sep = "\n"),
               title = NULL,
               #xlab = "MeasuredDEE (kJ/d*g) from model (DBAcr + DBA fp)",
-              ylab = FALSE
+              ylab = FALSE,
+              fullrange = TRUE
 )+
-  ggplot2::labs(x= expression("Predicted EE (kJ/d*g) from model DBA"[italic("col+rest")]+"BDA"[italic("com+for")]))
+  ggplot2::labs(x= expression("Predicted EE (kJ/d*g) from model DBA"[italic("col+rest")]+"BDA"[italic("com+for")]))+
+  ggplot2::annotation_custom(
+    grid::linesGrob(gp = grid::gpar(col = 'blue', lty = 2, lwd = 3)))+
+  ggplot2::scale_y_continuous(breaks = c(1, 1.5))+
+  ggplot2::xlim(range(calculations$DEE.KJ.d.g))#+
+  #ggplot2::coord_fixed(ratio = 1)
 D
 
 
@@ -502,9 +514,17 @@ E <- ggpubr::ggscatter(calculations, y = "DEE.KJ.d.g",
                                      label.sep = "\n"),
                #title = "DEE.KJ.d.g ~ predicted (dpDBA)",
                #xlab = "DEE (kJ/d*g) from total daily DBA",
-               ylab = "Measured DEE (kJ/d*g) from DLW"
+               ylab = "Measured DEE (kJ/d*g) from DLW",
+               fullrange = TRUE
+               
 )+
-  ggplot2::labs(x= "Predicted DEE (kJ/d*g) from model of daily DBA")
+  ggplot2::labs(x= "Predicted DEE (kJ/d*g) from model of daily DBA")+
+  ggplot2::annotation_custom(
+    grid::linesGrob(gp = grid::gpar(col = 'blue', lty = 2, lwd = 3)))+
+  ggplot2::scale_y_continuous(breaks = c(1, 1.5))+
+  ggplot2::xlim(range(calculations$DEE.KJ.d.g))#+
+  #ggplot2::coord_fixed(ratio = 1)# not the right route
+
 
 E
 cowplot::plot_grid(E, C, D, labels = c("A", "B", 
@@ -512,7 +532,7 @@ cowplot::plot_grid(E, C, D, labels = c("A", "B",
 
 plot_predictionsFull <- cowplot::plot_grid(E, C, D, labels = c("A", "B", "C"), nrow = 1)
 
-#ggplot2::ggsave("plots/plot_predictionsFullv2.png", plot_predictionsFull, dpi=300, units = 'in', width = 14, height = 5)
+#ggplot2::ggsave("plots/plot_predictionsFullv3.png", plot_predictionsFull, dpi=300, units = 'in', width = 14, height = 5)
 
 #####
 #for for each parameter of the best model  DONE DIRECTLHY WITH PLOT from GGPrEDICT above
@@ -727,10 +747,10 @@ dbamerge$DEEactivity <- dbamerge$`reg5$coefficients`*dbamerge$MeanDBA
 #write.csv(dbamerge,file ="data/DBAsummariesFINAL.csv")
 
 DBAsummaries <- calculations|>
-  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
-  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") %>%
-  group_by(dpDBA)|>
-  summarise(
+  dplyr::select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
+  tidyr::pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") |>
+  dplyr::group_by(dpDBA)|>
+  dplyr::summarise(
     MeanDBA = mean(dpDBAVal),
     Stdev = sd(dpDBAVal),
     Min = min(dpDBAVal),
@@ -743,8 +763,8 @@ DBAsummaries <- calculations|>
 
 #not in paper
 test_DBAcats <- calculations|>
-  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
-  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal")
+  dplyr::select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
+  tidyr::pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal")
 
 summary(lm(data = test_DBAcats, dpDBAVal ~ dpDBA))
 
@@ -752,30 +772,30 @@ modeldba <- aov(data = test_DBAcats, dpDBAVal ~ dpDBA)
 tukeydba <- TukeyHSD(modeldba, conf.level=.95)
 tukeydba
 
-ggplot(data = test_DBAcats)+
-  geom_boxplot(aes(x = dpDBA, y = dpDBAVal, col = dpDBA ))+
-  theme_bw()+
-  scale_x_discrete(labels=c("Colony","Flying","Plunging","Resting"))+
-  xlab("Activity")+
-  ylab("DBA daily Value")
+ggplot2::ggplot(data = test_DBAcats)+
+  ggplot2::geom_boxplot(aes(x = dpDBA, y = dpDBAVal, col = dpDBA ))+
+  ggplot2::theme_bw()+
+  ggplot2::scale_x_discrete(labels=c("Colony","Flying","Plunging","Resting"))+
+  ggplot2::xlab("Activity")+
+  ggplot2::ylab("DBA daily Value")
 
 test_DBAcats|>
-  ggplot(aes(x=dpDBA, y = dpDBAVal, col = dpDBA), color = cbbPalette) +
+  ggplot2::ggplot(ggplot2::aes(x=dpDBA, y = dpDBAVal, col = dpDBA), color = cbbPalette) +
   
-  geom_point(position = position_jitter(width = 0.2), alpha = 0.4 ) +  # Jittered raw data points
-  stat_summary(fun = mean, geom = "point", size = 3 ,#fill = "blue", 
-               position = position_dodge(width = 0.8)) +  # Mean values as bars
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0, position = position_dodge(width = 0.8)) +  # Mean standard error bars
-  labs(x = "Activity", y = "DBA daily Value"#,
+  ggplot2::geom_point(position = ggplot2::position_jitter(width = 0.2), alpha = 0.4 ) +  # Jittered raw data points
+  ggplot2::stat_summary(fun = mean, geom = "point", size = 3 ,#fill = "blue", 
+               position = ggplot2::position_dodge(width = 0.8)) +  # Mean values as bars
+  ggplot2::stat_summary(fun.data = ggplot2::mean_se, geom = "errorbar", width = 0, position = ggplot2::position_dodge(width = 0.8)) +  # Mean standard error bars
+  ggplot2::labs(x = "Activity", y = "DBA daily Value"#,
        #title = "Mean Values per Category"
   )  +
   #facet_wrap(~sex)+
-  theme_bw()+
+  ggplot2::theme_bw()+
   
-  scale_colour_manual(values=cbPalette#, labels =c('Colony', 'Flying', 'Plunging', 'Resting')
+  ggplot2::scale_colour_manual(values=cbPalette#, labels =c('Colony', 'Flying', 'Plunging', 'Resting')
   )+
-  scale_x_discrete(labels =c('Colony', 'Flying', 'Plunging', 'Resting'))+
-  theme(legend.position = "none")
+  ggplot2::scale_x_discrete(labels =c('Colony', 'Flying', 'Plunging', 'Resting'))+
+  ggplot2::theme(legend.position = "none")
 #theme(axis.text.x = element_blank())+
 # guides(color=guide_legend(title="Activity"))
 
@@ -804,8 +824,8 @@ ggscatter(calculationsraw_s, y = "DEE.KJ.d.g",
 
 #including outlier bird MALES
 calculations <- calculationsraw_s|>
-  dplyr::filter(sex == "M")%>% 
-  filter(!Time.total > 100)
+  dplyr::filter(sex == "M") |>
+  dplyr::filter(!Time.total > 100)
 
 #############################################################################################
 
@@ -846,7 +866,7 @@ Mmods_full.df$names<-rownames(Mmods_full.df)
 Mmods_full.df <- merge( x = Mmods_full.df, y = model_namesdf, by.x = "names", by.y ="name" )
 Mmods_full.df <- Mmods_full.df[order(Mmods_full.df$delta),]
 
-#write.csv(Mmods_full.df,"C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Mfull.csv")
+#write.csv(Mmods_full.df,"C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Mfullv2.csv")
 
 calculations$predicted1<-predict(reg2, newdata = calculations[ , c("TColRest","TFly","TFor")])
 #####
@@ -866,8 +886,8 @@ ggscatter(calculations, y = "DEE.KJ.d.g",
 ################################ FEMALES
 
 calculations <- calculationsraw_s|>
-  dplyr::filter(sex == "F")%>% 
-  filter(!Time.total > 100)
+  dplyr::filter(sex == "F")|>
+  dplyr::filter(!Time.total > 100)
 
 #############################################################################################
 reg0 <- lm(data = calculations, formula =DEE.KJ.d.g ~ 1 )
@@ -911,7 +931,7 @@ Fmods_full.df <- merge( x = Fmods_full.df, y = model_namesdf, by.x = "names", by
 
 Fmods_full.df <- Fmods_full.df[order(Fmods_full.df$delta),]
 
-#write.csv(Fmods_full.df,"C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Ffull.csv")
+#write.csv(Fmods_full.df,"C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Ffullv2.csv")
 
 calculations$predicted1<-predict(reg3, newdata = calculations[ , c("TColRest","TFlyFor")])
 
