@@ -12,7 +12,7 @@ set.seed(12345)
 
 #already saved #July 28th with new caloric coef and fixed time for A06
 #calculationsraw_s <- read.csv(file.choose()) 
-calculationsraw_s <- read.csv("C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/calculations.csv")
+calculationsraw_s <- read.csv("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/calculations.csv")
 
 calculations <- calculationsraw_s #<- calculations
 
@@ -118,9 +118,9 @@ car::influencePlot(dee.g.lm)
 deeg.pred <- ggeffects::ggpredict(
   dee.g.lm,
   terms = c("sex"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 )
 
@@ -135,9 +135,9 @@ ggplot2::ggplot(data = calculations)+ #, color = Spec
   ggplot2::geom_pointrange(data=ggeffects::ggpredict(
     dee.g.lm,
     terms = c("sex"),
-    ci.lvl = 0.95,
+    ci.level = 0.95,
     type = "fe",
-    back.transform= FALSE, 
+    back_transform= FALSE, 
     typical = "mean"
   ) ,
   ggplot2::aes(x = x, y = predicted, 
@@ -280,7 +280,7 @@ mods_full.df <- merge( x = mods_full.df, y = model_namesdf, by.x = "names", by.y
 
 mods_full.df <- mods_full.df[order(mods_full.df$delta),]
 
-#write.csv(mods_full.df, "C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_full.csv", row.names = FALSE)
+#write.csv(mods_full.df, "E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_full.csv", row.names = FALSE)
 
 
 ## total DBA model 
@@ -288,14 +288,14 @@ mods_full.df <- mods_full.df[order(mods_full.df$delta),]
 mod_pred_TotalDBA<-ggeffects::ggpredict(
   reg10,
   terms = c("dpDBA"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 ) #asking to predict only with 1 term to make the plot better, modify if needed
 
 
-mod_pred_TotDBA_PLOT <- plot(mod_pred_TotalDBA, add.data = TRUE, show.title = FALSE, colors = "bw")+
+mod_pred_TotDBA_PLOT <- plot(mod_pred_TotalDBA, show_data = TRUE, show_title = FALSE, colors = "bw")+
   ggplot2::labs(
     x = "Total daily DBA",
     y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
@@ -312,14 +312,14 @@ mod_pred_TotDBA_PLOT
 mod_pred_1A<-ggeffects::ggpredict(
   reg8i,
   terms = c("dpDBACol"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 ) #asking to predict only with 1 term to make the plot better, modify if needed
 
 
-mod_pred1_A_PLOT <- plot(mod_pred_1A, add.data = TRUE, show.title = FALSE, colors = "bw")+
+mod_pred1_A_PLOT <- plot(mod_pred_1A, show_data = TRUE, show_title = FALSE, colors = "bw")+
   ggplot2::labs(
     x = "DBA at the colony",
     y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
@@ -350,15 +350,15 @@ mod_pred1_A_PLOT
 mod_pred_1B<-ggeffects::ggpredict(
   reg8i,
   terms = c("dpDBAFFR"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 ) #asking to predict only with 1 term to make the plot better, modify if needed
 
-mod_pred_1B_PLOT <- plot(mod_pred_1B, add.data = TRUE, show.title = FALSE, colors = "bw")+
+mod_pred_1B_PLOT <- plot(mod_pred_1B, show_data = TRUE, show_title = FALSE, colors = "bw")+
   ggplot2::labs(
-    x = "DBA outsite of the colony (commuting, foraging, resting)",
+    x = "DBA away from the colony (commuting, foraging, resting)",
     y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
   )+
   ggplot2::theme(  text= ggplot2::element_text(size=18))
@@ -378,14 +378,14 @@ predic.two.models1 <- cowplot::plot_grid(mod_pred1_A_PLOT, mod_pred_1B_PLOT)
 mod_pred_2<-ggeffects::ggpredict(
   reg7,
   terms = c("dpDBAColRest","dpDBAFlyFor"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 )
   
 
-mod_pred_2_PLOT <- plot(mod_pred_2, add.data = TRUE, show.title = FALSE)+
+mod_pred_2_PLOT <- plot(mod_pred_2, show_data = TRUE, show_title = FALSE)+
   ggplot2::labs(
   x = "DBA at the colony",
   y = "Mass-specific Daily Energy Expenditure (kJ/d*g)",
@@ -397,14 +397,14 @@ mod_pred_2_PLOT
 mod_pred_2A<-ggeffects::ggpredict(
   reg7,
   terms = c("dpDBAColRest"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 ) #asking to predict only with 1 term to make the plot better, modify if needed
 
 
-mod_pred2_A_PLOT <- plot(mod_pred_2A, add.data = TRUE, show.title = FALSE, colors = "bw")+
+mod_pred2_A_PLOT <- plot(mod_pred_2A, show_data = TRUE, show_title = FALSE, colors = "bw")+
   ggplot2::labs(
     x = "DBA at the colony and resting",
     y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
@@ -416,14 +416,14 @@ mod_pred2_A_PLOT
 mod_pred_2B<-ggeffects::ggpredict(
   reg7,
   terms = c("dpDBAFlyFor"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 ) #asking to predict only with 1 term to make the plot better, modify if needed
 
 
-mod_pred2_B_PLOT <- plot(mod_pred_2B, add.data = TRUE, show.title = FALSE, colors = "bw")+
+mod_pred2_B_PLOT <- plot(mod_pred_2B, show_data = TRUE, show_title = FALSE, colors = "bw")+
   ggplot2::labs(
     x = "DBA commuting and foraging",
     y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
@@ -437,7 +437,7 @@ predict_2bestmod_plot<-cowplot::plot_grid(predic.two.models1, predic.two.models2
                                           labels = c("A","B"), 
                                           nrow = 2)
 
-#ggplot2::ggsave("plots/predict_2bestmod_plotv2.png", predict_2bestmod_plot, dpi = 300, bg = "white", units = 'in', width = 16, height = 14)
+#ggplot2::ggsave("plots/predict_2bestmod_plotv3.png", predict_2bestmod_plot, dpi = 300, bg = "white", units = 'in', width = 16, height = 14)
 
 
 
@@ -642,6 +642,11 @@ timebudgetplotALL <- calculations |>
   ggplot2::labs(x = "Activity", y = "Proportion of the day "#,
        #title = "Mean Values per Category"
   )  +
+  ggplot2::scale_y_continuous(
+    
+    # Add a second axis and specify its features
+    sec.axis = ggplot2::sec_axis( trans=~.*24, name="Hours")
+  ) +
   #facet_wrap(~sex)+
   ggplot2::theme_bw()+
   
@@ -657,13 +662,13 @@ timebudgetplotALL
 
 #ggplot2::ggsave(timebudgetplotALL, filename = "plots/timebudgetplotALLv2.png", dpi = 300, width =10 , height = 7)
 
-fly<-tiff::readTIFF("C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 2.tiff",
+fly<-tiff::readTIFF("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 2.tiff",
 )
-colony<-tiff::readTIFF("C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 4.tiff",
+colony<-tiff::readTIFF("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 4.tiff",
 )
-resting <- tiff::readTIFF("C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies.tiff",
+resting <- tiff::readTIFF("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies.tiff",
 )
-plunge <- tiff::readTIFF("C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 3.tiff",
+plunge <- tiff::readTIFF("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 3.tiff",
 )
 
 
@@ -681,7 +686,7 @@ pfinal <-
     ggplot2::annotation_custom(grid::rasterGrob(resting), 
                                xmin = 3.5, xmax = 4.5, ymin = .025, ymax = .35
     )
-ggplot2::ggsave(pfinal, filename = "plots/timebudgetplotALLv3.png", dpi = 300, width =10 , height = 7)
+ggplot2::ggsave(pfinal, filename = "plots/timebudgetplotALLv4.png", dpi = 300, width =10.5 , height = 7)
     
 #######################################################################################
 #not in paper
@@ -866,7 +871,7 @@ Mmods_full.df$names<-rownames(Mmods_full.df)
 Mmods_full.df <- merge( x = Mmods_full.df, y = model_namesdf, by.x = "names", by.y ="name" )
 Mmods_full.df <- Mmods_full.df[order(Mmods_full.df$delta),]
 
-#write.csv(Mmods_full.df,"C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Mfullv2.csv")
+#write.csv(Mmods_full.df,"E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Mfullv2.csv")
 
 calculations$predicted1<-predict(reg2, newdata = calculations[ , c("TColRest","TFly","TFor")])
 #####
@@ -931,7 +936,7 @@ Fmods_full.df <- merge( x = Fmods_full.df, y = model_namesdf, by.x = "names", by
 
 Fmods_full.df <- Fmods_full.df[order(Fmods_full.df$delta),]
 
-#write.csv(Fmods_full.df,"C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Ffullv2.csv")
+#write.csv(Fmods_full.df,"E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Ffullv2.csv")
 
 calculations$predicted1<-predict(reg3, newdata = calculations[ , c("TColRest","TFlyFor")])
 
@@ -972,9 +977,9 @@ car::influencePlot(pTcol.lm)
 pTCol.pred <- ggeffects::ggpredict(
   pTcol.lm,
   terms = c("sex"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 )
 
@@ -989,9 +994,9 @@ ggplot2::ggplot(data = calculations)+ #, color = Spec
   ggplot2::geom_pointrange(data=ggeffects::ggpredict(
     pTcol.lm,
     terms = c("sex"),
-    ci.lvl = 0.95,
+    ci.level = 0.95,
     type = "fe",
-    back.transform= FALSE, 
+    back_transform= FALSE, 
     typical = "mean"
   ) ,
   ggplot2::aes(x = x, y = predicted, 
@@ -1156,9 +1161,9 @@ car::influencePlot(dpDBACol.lm)
 dpDBACol.pred <- ggeffects::ggpredict(
   dpDBACol.lm,
   terms = c("sex"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 )
 
@@ -1173,9 +1178,9 @@ ggplot2::ggplot(data = calculations)+ #, color = Spec
   ggplot2::geom_pointrange(data=ggeffects::ggpredict(
     dpDBACol.lm,
     terms = c("sex"),
-    ci.lvl = 0.95,
+    ci.level = 0.95,
     type = "fe",
-    back.transform= FALSE, 
+    back_transform= FALSE, 
     typical = "mean"
   ) ,
   ggplot2::aes(x = x, y = predicted, 
@@ -1184,4 +1189,3 @@ ggplot2::ggplot(data = calculations)+ #, color = Spec
   ggplot2::ylab("dpDBACol.lm")+
   ggplot2::guides(color = "none")+
   ggplot2::theme_bw()
-
