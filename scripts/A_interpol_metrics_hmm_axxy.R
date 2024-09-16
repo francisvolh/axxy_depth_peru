@@ -482,7 +482,9 @@ saveRDS(m, 'C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - D
 saveRDS(hmmData,'C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/new HMM classification run 3 prop dive/hmm_predictionsv2.RDS')
 
 
-hmmData<-readRDS('C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/new HMM classification run 3 prop dive/hmm_predictionsv2.RDS')
+hmmData<-readRDS('E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/new HMM classification run 3 prop dive/hmm_predictionsv2.RDS')
+write.csv(hmmData, 'E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/new HMM classification run 3 prop dive/hmm_predictionsv2.csv',
+          row.names = FALSE)
 ### check plotting for each ind
 
 for (i in unique(hmmData$ID)){
