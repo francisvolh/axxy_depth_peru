@@ -230,6 +230,76 @@ saveRDS(data, 'C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 
 
 }
 
+
+################################# DBA for DEE 3sec window at 1 sec mean ######
+# calculates the DBA per second, using a window of 3seconds for the dynamic component of acc and 
+# a rolling mean per second of DAB
+#
+
+
+
+dep <- readRDS("dep_dataPeru_seabiRds.RDS")
+
+
+setwd("axxys pebos gucos")
+fn <- list.files('/project/6005805/francisv/axxys pebos gucos/processed_acc/raw_axxy', full.names = T, pattern = '.csv')
+
+# output directory
+
+out_dir <- 'processed_acc'
+if (dir.exists(out_dir)== FALSE) { 
+  dir.create(out_dir)
+}
+
+
+
+dep_ids<-dep$dep_id
+
+#to work with 3 files at a time 
+birds3<-NULL
+for (i in my.args) { #loop over only 3 birds
+  idx<-grep(i, dep_ids)
+  idx_fn <- grep(i, fn)
+  dep_one <- dep[idx,]
+  id_bird1 <- fn[idx_fn]
+  
+  dat<-read.csv(id_bird1, stringsAsFactors = FALSE, sep = ",")
+  
+  dd<-dep_one$dep_id
+  
+  dat <- dat %>% 
+    dplyr::mutate(
+      dep_id = dd,
+      time = as.POSIXct(Timestamp, tz = 'UTC', format = "%d/%m/%Y %H:%M:%OS") 
+    ) %>% 
+    dplyr::select(dep_id, time, X, Y, Z, location.lon, location.lat, Depth) %>% 
+    dplyr::rename(x = X, y = Y, z = Z, lon = location.lon, lat = location.lat) %>% 
+    dplyr::filter(time > dep$time_released[dep$dep_id == dd],
+                  time < dep$time_recaptured[dep$dep_id == dd])
+  
+  freq <- seabiRds::getFrequency(dat$time)
+  
+  dat <- dat %>% 
+    dplyr::mutate(
+      lon = imputeTS::na_interpolation(lon),
+      lat = imputeTS::na_interpolation(lat),
+    
+      
+      odba = seabiRds::getDBA(X = x, Y = y, Z = z, time = time, window = 3),
+      odba = zoo::rollmean(odba, k =  1, fill = NA, na.rm = T)
+   
+    ) %>% dplyr::slice(seq(1, nrow(dat), freq*1)) ### make average by minute instead of slicing
+  
+  dat<-seabiRds::filterSpeed(dat, lon = "lon", lat="lat", time="time", threshold = 101)
+  
+  birds3 <- rbind(birds3, dat)
+  
+}
+
+
+write.csv(birds3, paste0(out_dir, '/', paste0("DBAe",my.args[1],"_",my.args[2],"_", my.args[3]),'v2.csv'), row.names = F)
+
+
 ################################## load re run files from DRA 
 rds_files <-list.files("C:/Users/francis van oordt/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/new HMM classification run 3 prop dive/",
                        pattern = ".RDS")
