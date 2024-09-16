@@ -12,14 +12,14 @@ set.seed(12345)
 
 #already saved #July 28th with new caloric coef and fixed time for A06
 #calculationsraw_s <- read.csv(file.choose()) 
-calculationsraw_s <- read.csv("C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/calculations.csv")
+calculationsraw_s <- read.csv("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/calculations.csv")
 
 calculations <- calculationsraw_s #<- calculations
 
 
 # get some time sampling values numbers (Excluding long deployed bird, which will be excluded for all calculations later as well) 
-calculations[which(calculations$Time.total <100),] %>% 
-  summarise(
+calculations[which(calculations$Time.total <100),] |>
+  dplyr::summarise(
     meanTime = mean(Time.total),
     maxTime = max(Time.total),
     minTime = min(Time.total),
@@ -34,67 +34,74 @@ head(calculations)
 #####
 #visuals only
 #including outlier bird
-
-ggscatter(calculations[which(calculations$SampTime <70),], y = "DEE.kJ.d", #[which(calculations$SampTime <50),]
-          x = "Time.total",
-          color = "black", shape = 21, #size = 3, # Points color, shape and size
-          add = "reg.line",  # Add regressin line
-          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
-          conf.int = TRUE, # Add confidence interval
-          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
-          cor.coeff.args = list(method = "pearson", #label.x = 3, 
-                                label.sep = "\n")#,
-          #title = "DEE.KJ.d.g ~ Sampling time"
+{
+  ggpubr::ggscatter(calculations[which(calculations$SampTime <70),], y = "DEE.kJ.d", #[which(calculations$SampTime <50),]
+                   x = "Time.total",
+                   color = "black", shape = 21, #size = 3, # Points color, shape and size
+                   add = "reg.line",  # Add regressin line
+                   add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+                   conf.int = TRUE, # Add confidence interval
+                   cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+                   cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                         label.sep = "\n")#,
+                   #title = "DEE.KJ.d.g ~ Sampling time"
 )
+  
+  ggpubr::ggscatter(calculations[which(calculations$SampTime <70),], y = "DEE.KJ.d.g", #[which(calculations$SampTime <50),]
+                    x = "Time.total",
+                    color = "black", shape = 21, #size = 3, # Points color, shape and size
+                    add = "reg.line",  # Add regressin line
+                    add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+                    conf.int = TRUE, # Add confidence interval
+                    cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+                    cor.coeff.args = list(method = "pearson", #label.x = 3, 
+                                          label.sep = "\n")#,
+                    #title = "DEE.KJ.d.g ~ Sampling time"
+  )
+  
+  }
 
-ggscatter(calculations[which(calculations$SampTime <70),], y = "DEE.KJ.d.g", #[which(calculations$SampTime <50),]
-          x = "Time.total",
-          color = "black", shape = 21, #size = 3, # Points color, shape and size
-          add = "reg.line",  # Add regressin line
-          add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
-          conf.int = TRUE, # Add confidence interval
-          cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
-          cor.coeff.args = list(method = "pearson", #label.x = 3, 
-                                label.sep = "\n")#,
-          #title = "DEE.KJ.d.g ~ Sampling time"
-)
 #####################################
-# Summaries for DEEg
+# Summaries for DEE and DEEg
 
 summary(calculations[ , c("DEE.KJ.d.g","DEE.kJ.d")])
 
-df_to_pivot <- calculations[ , c("merge.col" ,"DEE.KJ.d.g","DEE.kJ.d", "sex")]
+df_to_pivot <- calculations[ , c("merge.col" ,"DEE.KJ.d.g","DEE.kJ.d", "sex", "Mass.avg.")]
 
-for_summary <- df_to_pivot %>% 
-  rename(DEEg = DEE.KJ.d.g, DEE = DEE.kJ.d ) %>% 
-  pivot_longer(cols =c(DEE,DEEg) , names_to = "Variable", values_to = "values") %>% 
-  group_by(Variable) %>% 
-  summarise(
+for_summary <- df_to_pivot |>
+  dplyr::rename(DEEg = DEE.KJ.d.g, DEE = DEE.kJ.d )|>
+  tidyr::pivot_longer(cols =c(DEE,DEEg) , names_to = "Variable", values_to = "values")|> 
+  dplyr::group_by(Variable) |> 
+  dplyr::summarise(
     mean=mean(values), 
     sd=sd(values),
     min = min(values),
-    max = max(values)
+    max = max(values),
+    mass = mean(Mass.avg.),
+    sd.mass=sd(Mass.avg.)
   )
 
 for_summary <- as.data.frame(for_summary)
 
 #write.csv(for_summary, "DEE_summary.csv")
 
-for_S_summary <- df_to_pivot %>% 
-  rename(DEEg = DEE.KJ.d.g, DEE = DEE.kJ.d ) %>% 
-  pivot_longer(cols =c(DEE,DEEg) , names_to = "Variable", values_to = "values") %>% 
-  group_by(Variable, sex) %>% 
-  summarise(
+for_S_summary <- df_to_pivot |>
+  dplyr::rename(DEEg = DEE.KJ.d.g, DEE = DEE.kJ.d ) |>
+  tidyr::pivot_longer(cols =c(DEE,DEEg) , names_to = "Variable", values_to = "values") |>
+  dplyr::group_by(Variable, sex) |>
+  dplyr::summarise(
     mean=mean(values), 
     sd=sd(values),
     min = min(values),
-    max = max(values)
+    max = max(values),
+    mass = mean(Mass.avg.),
+    sd.mass=sd(Mass.avg.)
   )
 
 #write.csv(for_S_summary, "DEE_summary_sex.csv")
 
 #####
-#checking for sex differences in DEEg
+#checking for sex differences in DEEg and DEE total
 
 dee.g.lm <- lm(data = calculations, DEE.KJ.d.g ~ sex)
 
@@ -107,56 +114,61 @@ car::leveneTest(resid(dee.g.lm)~ calculations$sex)
 
 car::influencePlot(dee.g.lm)
 
+
 deeg.pred <- ggeffects::ggpredict(
   dee.g.lm,
   terms = c("sex"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 )
 
-ggplot(data = calculations)+
-  geom_point( aes(y = DEE.KJ.d.g, x = sex) )
+ggplot2::ggplot(data = calculations)+
+  ggplot2::geom_point( ggplot2::aes(y = DEE.KJ.d.g, x = sex) )
 
 
-ggplot(data = calculations)+ #, color = Spec
-  geom_point(aes(y = DEE.KJ.d.g, x = sex), position = position_jitter(height = 0, width = 0.1),
+ggplot2::ggplot(data = calculations)+ #, color = Spec
+  ggplot2::geom_point(ggplot2::aes(y = DEE.KJ.d.g, x = sex), position = ggplot2::position_jitter(height = 0, width = 0.1),
              alpha = 0.3)+
   #scale_color_manual(values= c("magenta4", "darkgreen"))+
-  geom_pointrange(data=ggeffects::ggpredict(
+  ggplot2::geom_pointrange(data=ggeffects::ggpredict(
     dee.g.lm,
     terms = c("sex"),
-    ci.lvl = 0.95,
+    ci.level = 0.95,
     type = "fe",
-    back.transform= FALSE, 
+    back_transform= FALSE, 
     typical = "mean"
   ) ,
-                  aes(x = x, y = predicted, 
+  ggplot2::aes(x = x, y = predicted, 
                       ymin = predicted-std.error, ymax = predicted+std.error, color = x))+
-  xlab("Sex")+
-  ylab("DEE/g")+
-  guides(color = "none")+
-  theme_bw()
+  ggplot2::xlab("Sex")+
+  ggplot2::ylab("DEE/g")+
+  ggplot2::guides(color = "none")+
+  ggplot2::theme_bw()
 
 
+# DEE total - not mass specific
+dee.lm <- lm(data = calculations, DEE.kJ.d ~ sex)
 
-ggplot(data = calculations)+ #, color = Spec
-  geom_point(aes(y = DEE.kJ.d, x = sex), position = position_jitter(height = 0, width = 0.1),
+summary(dee.lm)
+
+ggplot2::ggplot(data = calculations)+ #, color = Spec
+  ggplot2::geom_point(ggplot2::aes(y = DEE.kJ.d, x = sex), position = ggplot2::position_jitter(height = 0, width = 0.1),
              alpha = 0.3)+
   #scale_color_manual(values= c("magenta4", "darkgreen"))+
-  xlab("Sex")+
-  ylab("DEE")+
-  guides(color = "none")+
-  theme_bw()
+  ggplot2::xlab("Sex")+
+  ggplot2::ylab("DEE")+
+  ggplot2::guides(color = "none")+
+  ggplot2::theme_bw()
 
 ######
 #### MUST DO bird has not a full axxy cycle
 ####
 #eliminate bird A06
 
-calculations <- calculationsraw_s %>% 
-  filter(!Time.total > 100) #getting rid of 
+calculations <- calculationsraw_s |>
+ dplyr::filter(!Time.total > 100) #getting rid of 
 
 
 ####################################################################### 
@@ -217,7 +229,7 @@ reg4i <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTFFR + 0)
 #which has lowest AIC? What are P-values? That is, what activities are similar to one another in terms of energetics? (Where Tcolrest = the sum of the colony of Tcol + Trest).
 
 
-reg5 <- lm(data = calculations, formula = DEE.KJ.d.g ~ dpDBACol + dpDBAFly + dpDBAFor + dpDBARest + 0)
+reg5 <- lm(data = calculations, formula = DEE.KJ.d.g ~ dpDBACol + dpDBAFly + dpDBAFor + dpDBARest)
 reg6 <- lm(data = calculations, formula =DEE.KJ.d.g ~ dpDBAColRest + dpDBAFly + dpDBAFor)
 reg7 <- lm(data = calculations, formula =DEE.KJ.d.g ~ dpDBAColRest + dpDBAFlyFor)
 reg8 <- lm(data = calculations, formula = DEE.KJ.d.g ~ dpDBACol + dpDBARest +  dpDBAFlyFor)
@@ -256,11 +268,9 @@ mods_full <- MuMIn::model.sel(reg0, reg1, reg2, reg3, reg4, reg4i, reg5, reg6, r
 
 mods_full
 
-summary(reg8i)# best ranked model of all the 2 parameter or more
-
-
-
+summary(reg10)# best ranked model of all the 2 parameter or more
 summary(reg7)
+summary(reg8i)
 
 mods_full.df <- as.data.frame(mods_full)
 
@@ -270,24 +280,27 @@ mods_full.df <- merge( x = mods_full.df, y = model_namesdf, by.x = "names", by.y
 
 mods_full.df <- mods_full.df[order(mods_full.df$delta),]
 
-#write.csv(mods_full.df, "C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/processed_acc_third_run/mods_full.csv")
+#write.csv(mods_full.df, "E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_full.csv", row.names = FALSE)
+
+
 ## total DBA model 
 
 mod_pred_TotalDBA<-ggeffects::ggpredict(
   reg10,
   terms = c("dpDBA"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 ) #asking to predict only with 1 term to make the plot better, modify if needed
 
 
-mod_pred_TotDBA_PLOT <- plot(mod_pred_TotalDBA, add.data = TRUE, show.title = FALSE, colors = "bw")+
-  labs(
+mod_pred_TotDBA_PLOT <- plot(mod_pred_TotalDBA, show_data = TRUE, show_title = FALSE, colors = "bw")+
+  ggplot2::labs(
     x = "Total daily DBA",
     y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
-  )
+  )+
+  ggplot2::theme(  text= ggplot2::element_text(size=18))
 mod_pred_TotDBA_PLOT
 
 ##ggsave("plots/total_dailyDBAmodel.png", mod_pred_TotDBA_PLOT, dpi = 300, bg = "white", units = 'in', width = 7.5, height = 6)
@@ -299,18 +312,19 @@ mod_pred_TotDBA_PLOT
 mod_pred_1A<-ggeffects::ggpredict(
   reg8i,
   terms = c("dpDBACol"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 ) #asking to predict only with 1 term to make the plot better, modify if needed
 
 
-mod_pred1_A_PLOT <- plot(mod_pred_1A, add.data = TRUE, show.title = FALSE, colors = "bw")+
-  labs(
+mod_pred1_A_PLOT <- plot(mod_pred_1A, show_data = TRUE, show_title = FALSE, colors = "bw")+
+  ggplot2::labs(
     x = "DBA at the colony",
     y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
-  )
+  )+
+  ggplot2::theme(  text= ggplot2::element_text(size=18))
 mod_pred1_A_PLOT
 
 
@@ -331,28 +345,32 @@ mod_pred1_A_PLOT
   #theme_bw()
 ###############################################################
 
+# model results with prediction confidence
+### 
 mod_pred_1B<-ggeffects::ggpredict(
   reg8i,
   terms = c("dpDBAFFR"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 ) #asking to predict only with 1 term to make the plot better, modify if needed
 
-mod_pred_1B_PLOT <- plot(mod_pred_1B, add.data = TRUE, show.title = FALSE, colors = "bw")+
-  labs(
-    x = "DBA outsite of the colony (Flying, Plunging, Resting)",
+mod_pred_1B_PLOT <- plot(mod_pred_1B, show_data = TRUE, show_title = FALSE, colors = "bw")+
+  ggplot2::labs(
+    x = "DBA away from the colony (commuting, foraging, resting)",
     y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
-  )
+  )+
+  ggplot2::theme(  text= ggplot2::element_text(size=18))
 mod_pred_1B_PLOT
 #plot(mod_pred_1, colors = "bw", ci = TRUE, ci.style = "dash")
 
 #two plots with one plot indepently per parameter predictions
 cowplot::plot_grid(mod_pred1_A_PLOT, mod_pred_1B_PLOT)
-predic.two.models <- cowplot::plot_grid(mod_pred1_A_PLOT, mod_pred_1B_PLOT)
+predic.two.models1 <- cowplot::plot_grid(mod_pred1_A_PLOT, mod_pred_1B_PLOT)
 
-#ggsave("plots/predic.twoPar.models.png", predic.two.models, dpi = 300, bg = "white", units = 'in', width = 15, height = 6)
+#ggplot2::ggsave("plots/predic.twoPar.modelsv2.png", predic.two.models, dpi = 300, bg = "white", units = 'in', width = 15, height = 6)
+
 
 ##############################################################
 #alternative 2 for model prediction graph with both terms together
@@ -360,40 +378,77 @@ predic.two.models <- cowplot::plot_grid(mod_pred1_A_PLOT, mod_pred_1B_PLOT)
 mod_pred_2<-ggeffects::ggpredict(
   reg7,
   terms = c("dpDBAColRest","dpDBAFlyFor"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 )
   
 
-mod_pred_2_PLOT <- plot(mod_pred_2, add.data = TRUE, show.title = FALSE)+labs(
+mod_pred_2_PLOT <- plot(mod_pred_2, show_data = TRUE, show_title = FALSE)+
+  ggplot2::labs(
   x = "DBA at the colony",
   y = "Mass-specific Daily Energy Expenditure (kJ/d*g)",
   colour = "DBA away from Colony"
 )
 mod_pred_2_PLOT
 
+#second best model
+mod_pred_2A<-ggeffects::ggpredict(
+  reg7,
+  terms = c("dpDBAColRest"),
+  ci.level = 0.95,
+  type = "fe",
+  back_transform= FALSE, 
+  typical = "mean"
+) #asking to predict only with 1 term to make the plot better, modify if needed
 
 
-#summary(reg8)
-#ggeffects::ggpredict(
- # reg8,
-  #terms = c(" dpDBACol","dpDBARest", "dpDBAFlyFor"),
-  #ci.lvl = 0.95,
-  #type = "fe",
-  #back.transform= FALSE, 
-  #typical = "mean"
-#)
+mod_pred2_A_PLOT <- plot(mod_pred_2A, show_data = TRUE, show_title = FALSE, colors = "bw")+
+  ggplot2::labs(
+    x = "DBA at the colony and resting",
+    y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
+  )+
+  ggplot2::theme(  text= ggplot2::element_text(size=18))
+mod_pred2_A_PLOT
 
 
-######## 
+mod_pred_2B<-ggeffects::ggpredict(
+  reg7,
+  terms = c("dpDBAFlyFor"),
+  ci.level = 0.95,
+  type = "fe",
+  back_transform= FALSE, 
+  typical = "mean"
+) #asking to predict only with 1 term to make the plot better, modify if needed
+
+
+mod_pred2_B_PLOT <- plot(mod_pred_2B, show_data = TRUE, show_title = FALSE, colors = "bw")+
+  ggplot2::labs(
+    x = "DBA commuting and foraging",
+    y = "Mass-specific Daily Energy Expenditure (kJ/d*g)"
+  )+
+  ggplot2::theme(  text= ggplot2::element_text(size=18))
+mod_pred2_B_PLOT
+
+predic.two.models2 <- cowplot::plot_grid(mod_pred2_A_PLOT, mod_pred2_B_PLOT)
+
+predict_2bestmod_plot<-cowplot::plot_grid(predic.two.models1, predic.two.models2, 
+                                          labels = c("A","B"), 
+                                          nrow = 2)
+
+#ggplot2::ggsave("plots/predict_2bestmod_plotv3.png", predict_2bestmod_plot, dpi = 300, bg = "white", units = 'in', width = 16, height = 14)
+
+
+
+
+######## IN THE PAPER
 ### predicted vs actual values scatter plots
 
 #best model parametrized
 calculations$predicted1<-predict(reg8i, newdata = calculations[ , c("dpDBACol", "dpDBAFFR")])
 
-C <- ggscatter(calculations, y = "DEE.KJ.d.g", 
+C <- ggpubr::ggscatter(calculations, y = "DEE.KJ.d.g", 
          x = "predicted1",
          color = "black", shape = 21, #size = 3, # Points color, shape and size
          add = "reg.line",  # Add regressin line
@@ -403,16 +458,24 @@ C <- ggscatter(calculations, y = "DEE.KJ.d.g",
          cor.coeff.args = list(method = "pearson", #label.x = 3, 
                                label.sep = "\n"),
          title = NULL,
-         xlab = "DEE (kJ/d*g) from model (DBA col + DBA away)",
-         ylab = FALSE
-)
+         #xlab = "DEE (kJ/d*g) from model (DBA col + DBA away)",
+         ylab = FALSE,
+         fullrange = TRUE
+)+
+  ggplot2::annotation_custom(
+    grid::linesGrob(gp = grid::gpar(col = 'blue', lty = 2, lwd = 3)))+
+  ggplot2::labs(x= expression("Predictted DEE (kJ/d*g) from model DBA"[italic(col)]+"DBA"[italic("com+for+rest")]))+
+  ggplot2::scale_y_continuous(breaks = c(1, 1.5))+
+  ggplot2::xlim(range(calculations$DEE.KJ.d.g))#+
+  #ggplot2::coord_fixed(ratio = 1)
+
 C
 
 ## second best model parametrized
 
 calculations$predicted2<-predict(reg7, newdata = calculations[ , c("dpDBAColRest", "dpDBAFlyFor")])
 
-D <- ggscatter(calculations, y = "DEE.KJ.d.g", 
+D <- ggpubr::ggscatter(calculations, y = "DEE.KJ.d.g", 
               x = "predicted2",
               color = "black", shape = 21, #size = 3, # Points color, shape and size
               add = "reg.line",  # Add regressin line
@@ -422,9 +485,16 @@ D <- ggscatter(calculations, y = "DEE.KJ.d.g",
               cor.coeff.args = list(method = "pearson", #label.x = 3, 
                                     label.sep = "\n"),
               title = NULL,
-              xlab = "DEE (kJ/d*g) from model (DBA col-rest + DBA fly-plun)",
-              ylab = FALSE
-)
+              #xlab = "MeasuredDEE (kJ/d*g) from model (DBAcr + DBA fp)",
+              ylab = FALSE,
+              fullrange = TRUE
+)+
+  ggplot2::labs(x= expression("Predicted EE (kJ/d*g) from model DBA"[italic("col+rest")]+"BDA"[italic("com+for")]))+
+  ggplot2::annotation_custom(
+    grid::linesGrob(gp = grid::gpar(col = 'blue', lty = 2, lwd = 3)))+
+  ggplot2::scale_y_continuous(breaks = c(1, 1.5))+
+  ggplot2::xlim(range(calculations$DEE.KJ.d.g))#+
+  #ggplot2::coord_fixed(ratio = 1)
 D
 
 
@@ -433,7 +503,7 @@ D
 ### predictions for total DEE and actual values - BEST MODEL
 calculations$predicted3 <- predict(reg10, newdata = data.frame(dpDBA = calculations[ , c("dpDBA")]))
 
-E <- ggscatter(calculations, y = "DEE.KJ.d.g", 
+E <- ggpubr::ggscatter(calculations, y = "DEE.KJ.d.g", 
                x = "predicted3",
                color = "black", shape = 21, #size = 3, # Points color, shape and size
                add = "reg.line",  # Add regressin line
@@ -443,16 +513,26 @@ E <- ggscatter(calculations, y = "DEE.KJ.d.g",
                cor.coeff.args = list(method = "pearson", #label.x = 3, 
                                      label.sep = "\n"),
                #title = "DEE.KJ.d.g ~ predicted (dpDBA)",
-               xlab = "DEE (kJ/d*g) from total daily DBA",
-               ylab = "DEE (kJ/d*g) from DLW"
-)
+               #xlab = "DEE (kJ/d*g) from total daily DBA",
+               ylab = "Measured DEE (kJ/d*g) from DLW",
+               fullrange = TRUE
+               
+)+
+  ggplot2::labs(x= "Predicted DEE (kJ/d*g) from model of daily DBA")+
+  ggplot2::annotation_custom(
+    grid::linesGrob(gp = grid::gpar(col = 'blue', lty = 2, lwd = 3)))+
+  ggplot2::scale_y_continuous(breaks = c(1, 1.5))+
+  ggplot2::xlim(range(calculations$DEE.KJ.d.g))#+
+  #ggplot2::coord_fixed(ratio = 1)# not the right route
+
+
 E
 cowplot::plot_grid(E, C, D, labels = c("A", "B", 
                                        "C"), nrow = 1)
 
 plot_predictionsFull <- cowplot::plot_grid(E, C, D, labels = c("A", "B", "C"), nrow = 1)
 
-#ggsave("plots/plot_predictionsFull.png", plot_predictionsFull, units = 'in', width = 22.5, height = 6)
+#ggplot2::ggsave("plots/plot_predictionsFullv3.png", plot_predictionsFull, dpi=300, units = 'in', width = 14, height = 5)
 
 #####
 #for for each parameter of the best model  DONE DIRECTLHY WITH PLOT from GGPrEDICT above
@@ -490,22 +570,23 @@ plot_predictionsFull <- cowplot::plot_grid(E, C, D, labels = c("A", "B", "C"), n
 
 #in both cases for models with Fly and For(plunging) merged!
 
-# TIME BUDGETS ALL BIRDS
-#reg1 <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTFly + pTFor + pTRest + 0)
-reg4 <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTRest +  pTFlyFor + 0)
+# TIME BUDGETS ALL BIRDS all 4 activities!!
+reg1 <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTFly + pTFor + pTRest + 0)
+#reg4 <- lm(data = calculations, formula = DEE.KJ.d.g ~ pTCol + pTRest +  pTFlyFor + 0)
 
-reg4
-reg4$coefficients
-timecoefsErr <-summary(reg4)$coefficients[, 2] # std errors for paramters
+reg1
+reg1$coefficients
+timecoefsErr <-summary(reg1)$coefficients[, 2] # std errors for paramters
 
-timecoefs <-as.data.frame(reg4$coefficients)
+timecoefs <-as.data.frame(reg1$coefficients)
 timecoefs$activity <- rownames(timecoefs)
 timecoefs$timecoefsErr<-timecoefsErr
-Timesummaries <- calculations %>% 
-  select(dep_id, pTCol,pTFlyFor,pTRest, sex) %>% 
-  pivot_longer(cols = c(pTCol,pTFlyFor,pTRest), names_to = "pTime", values_to = "pTimeVal") %>%
-  group_by(pTime) %>% 
-  summarise(
+
+Timesummaries <- calculations |>
+  dplyr::select(dep_id, pTCol,pTFly, pTFor,pTRest, sex) |> 
+  tidyr::pivot_longer(cols = c(pTCol,pTFly, pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal")|>
+  dplyr::group_by(pTime) |>
+  dplyr::summarise(
     MeanTime = mean(pTimeVal),
     Hourpday = MeanTime*24,
     Stdev = sd(pTimeVal),
@@ -513,20 +594,24 @@ Timesummaries <- calculations %>%
     Max = max(pTimeVal)
   )
 
-timemerge<-merge(Timesummaries, timecoefs, by.x = c("pTime"), by.y = c("activity"))
-timemerge$DEEactivity <- timemerge$`reg4$coefficients`*timemerge$MeanTime
+
+#not on paper
+#timemerge<-merge(Timesummaries, timecoefs, by.x = c("pTime"), by.y = c("activity"))
+
+#timemerge$DEEactivity <- timemerge$`reg1$coefficients`*timemerge$MeanTime
 
 
 
-#write.csv(timemerge, "TimesummariesFINAL.csv")
+#write.csv(timemerge, "data/TimesummariesFINAL.csv")
 
-reg4$coefficients[ c("pTFlyFor")]
+#trials
+#reg4$coefficients[ c("pTFlyFor")]
 
-flight_costs_all <- calculations[ , c("dep_id", "Mass.avg.")]
-flight_costs_all$flight_coef <- reg4$coefficients[ c("pTFlyFor")]
-flight_costs_all$watts <- flight_costs_all$flight_coef*1000*flight_costs_all$Mass.avg./(24*60*60)
-mean(flight_costs_all$watts)
-mean(flight_costs_all$Mass.avg.)
+#flight_costs_all <- calculations[ , c("dep_id", "Mass.avg.")]
+#flight_costs_all$flight_coef <- reg4$coefficients[ c("pTFlyFor")]
+#flight_costs_all$watts <- flight_costs_all$flight_coef*1000*flight_costs_all$Mass.avg./(24*60*60)
+#mean(flight_costs_all$watts)
+#mean(flight_costs_all$Mass.avg.)
 ###################################################################################################
 #colorblind friendly palette
 
@@ -542,37 +627,74 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 # To use for line and point colors, add
 #scale_colour_manual(values=cbPalette)
 
-timebudgetplotALL <- calculations %>% 
-  select(dep_id, pTCol,pTFly,pTFor,pTRest, sex) %>% 
-  pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal") %>% 
-  ggplot(aes(x=pTime, y = pTimeVal, col = pTime), color = cbbPalette) +
+timebudgetplotALL <- calculations |>
+  dplyr::select(dep_id, pTCol,pTFly,pTFor,pTRest, sex) |>
+  tidyr::pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), 
+                      names_to = "pTime", values_to = "pTimeVal") |> 
+  ggplot2::ggplot(ggplot2::aes(x=pTime, y = pTimeVal, col = pTime), color = cbbPalette) +
  
-  geom_point(position = position_jitter(width = 0.2), alpha = 0.4 ) +  # Jittered raw data points
-  stat_summary(fun = mean, geom = "point", size = 3 ,#fill = "blue", 
-               position = position_dodge(width = 0.8)) +  # Mean values as bars
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0, position = position_dodge(width = 0.8)) +  # Mean standard error bars
-  labs(x = "Category", y = "Proportion of hours in the day "#,
+  ggplot2::geom_point(position =  ggplot2::position_jitter(width = 0.2), alpha = 0.4 ,
+                      ggplot2::aes(shape=sex), cex = 3) +  # Jittered raw data points
+  ggplot2::stat_summary(fun = mean, geom = "point", size = 3 ,#fill = "blue", 
+               position =  ggplot2::position_dodge(width = 0.8)) +  # Mean values as bars
+  ggplot2::stat_summary( fun.data =  ggplot2::mean_se, geom = "errorbar", 
+                         width = 0, position =  ggplot2::position_dodge(width = 0.8)) +  # Mean standard error bars
+  ggplot2::labs(x = "Activity", y = "Proportion of the day "#,
        #title = "Mean Values per Category"
   )  +
+  ggplot2::scale_y_continuous(
+    
+    # Add a second axis and specify its features
+    sec.axis = ggplot2::sec_axis( trans=~.*24, name="Hours")
+  ) +
   #facet_wrap(~sex)+
-  theme_bw()+
+  ggplot2::theme_bw()+
   
-  scale_colour_manual(values=cbPalette#, labels =c('Colony', 'Flying', 'Plunging', 'Resting')
+  ggplot2::scale_colour_manual(values=cbPalette#, labels =c('Colony', 'Flying', 'Plunging', 'Resting')
                                                   )+
-  scale_x_discrete(labels =c('Colony', 'Flying', 'Plunging', 'Resting'))+
-  theme(legend.position = "none")
+  ggplot2::scale_x_discrete(labels =c('Colony', 'Flying', 'Foraging', 'Resting'))+
+  ggplot2::theme(text=ggplot2::element_text(size=20),
+                 legend.position = "none")
   #theme(axis.text.x = element_blank())+
  # guides(color=guide_legend(title="Activity"))
 timebudgetplotALL
 
-#ggsave(timebudgetplotALL, filename = "plots/timebudgetplotALL.png", dpi = 300, width =10 , height = 7)
 
+#ggplot2::ggsave(timebudgetplotALL, filename = "plots/timebudgetplotALLv2.png", dpi = 300, width =10 , height = 7)
+
+fly<-tiff::readTIFF("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 2.tiff",
+)
+colony<-tiff::readTIFF("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 4.tiff",
+)
+resting <- tiff::readTIFF("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies.tiff",
+)
+plunge <- tiff::readTIFF("E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/drawings/Peruvian_Boobies 3.tiff",
+)
+
+
+pfinal <-
+    timebudgetplotALL + 
+    ggplot2::annotation_custom(grid::rasterGrob(fly), 
+                               xmin = 1.5, xmax = 2.5, ymin = .55, ymax = 1
+                                        )+ 
+    ggplot2::annotation_custom(grid::rasterGrob(colony), 
+                               xmin = 0.5, xmax = 1.3, ymin = .05, ymax = .45
+    )+ 
+    ggplot2::annotation_custom(grid::rasterGrob(plunge), 
+                               xmin = 2.5, xmax = 3.5, ymin = .35, ymax = .75
+    )+ 
+    ggplot2::annotation_custom(grid::rasterGrob(resting), 
+                               xmin = 3.5, xmax = 4.5, ymin = .025, ymax = .35
+    )
+ggplot2::ggsave(pfinal, filename = "plots/timebudgetplotALLv4.png", dpi = 300, width =10.5 , height = 7)
+    
 #######################################################################################
 #not in paper
 
-test_TimeBudgets <- calculations %>% 
-  select(dep_id, pTCol,pTFly,pTFor,pTRest, sex) %>% 
-  pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal")
+# test for differences in time allocation among behaviours
+test_TimeBudgets <- calculations |>
+  dplyr::select(dep_id, pTCol,pTFly,pTFor,pTRest, sex) |> 
+  tidyr::pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal")
 
 summary(lm(data = test_TimeBudgets, pTimeVal ~ pTime))
 
@@ -580,34 +702,43 @@ model<-aov(data = test_TimeBudgets, pTimeVal ~ pTime)
 tukeyTime<-TukeyHSD(model, conf.level=.95)
 tukeyTime
 
-test_TimeBudgets %>% 
-  ggplot()+
-  geom
+
 
 summary(lm(data = calculations, pTCol ~ pDBACol))
 cor(calculations$pTCol, calculations$pDBACol)
+
+#not in paper
+calculations|>
+  ggplot2::ggplot( ggplot2::aes( x = pTCol, y = pDBACol))+
+  ggplot2::geom_point()+
+  ggplot2::geom_smooth(method ="lm", , formula= y~x)
 
 summary(lm(data = calculations, pTFFR ~ dpDBAFFR))
 cor(calculations$pTFFR, calculations$dpDBAFFR)
 #######################################################################################
 
 # DBA
-#reg5 <- lm(data = calculations, formula = DEE.KJ.d.g ~ dpDBACol + dpDBAFly + dpDBAFor + dpDBARest)
-reg8 <- lm(data = calculations, formula = DEE.KJ.d.g ~ dpDBACol + dpDBARest +  dpDBAFlyFor)
-reg8$coefficients # estimate coefficients
-dbacoefsErr <-summary(reg8)$coefficients[, 2] # std errors for paramters
+reg5 <- lm(data = calculations, formula = DEE.KJ.d.g ~ dpDBACol + dpDBAFly + dpDBAFor + dpDBARest)
+#reg8 <- lm(data = calculations, formula = DEE.KJ.d.g ~ dpDBACol + dpDBARest +  dpDBAFlyFor)
+reg5$coefficients # estimate coefficients
+dbacoefsErr <-summary(reg5)$coefficients[, 2] # std errors for paramters
 
-dbacoefs <-as.data.frame(reg8$coefficients)
+dbacoefs <-as.data.frame(reg5$coefficients)
 dbacoefs$activity <- rownames(dbacoefs)
 dbacoefs$dbacoefsErr <- dbacoefsErr
 
 ##summaries of DBA per activity
+calculations|>
+  dplyr::select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
+  tidyr::pivot_longer(cols = c(dpDBACol, dpDBAFly, dpDBARest, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") |>
+  ggplot2::ggplot()+
+  ggplot2::geom_boxplot(ggplot2::aes(x= dpDBA, y= dpDBAVal))
 
-DBAsummaries <- calculations %>% 
-  select(dep_id, dpDBACol, dpDBARest, dpDBAFlyFor, sex) %>% 
-  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFlyFor), names_to = "dpDBA", values_to = "dpDBAVal") %>%
-  group_by(dpDBA) %>% 
-  summarise(
+DBAsummaries <- calculations|>
+  dplyr::select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
+  tidyr::pivot_longer(cols = c(dpDBACol, dpDBAFly, dpDBARest, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") |>
+  dplyr::group_by(dpDBA)|>
+  dplyr::summarise(
     MeanDBA = mean(dpDBAVal),
     Stdev = sd(dpDBAVal),
     Min = min(dpDBAVal),
@@ -616,15 +747,15 @@ DBAsummaries <- calculations %>%
 
 
 dbamerge<-merge(DBAsummaries, dbacoefs, by.x = c("dpDBA"), by.y = c("activity"))
-dbamerge$DEEactivity <- dbamerge$`reg8$coefficients`*dbamerge$MeanDBA
+dbamerge$DEEactivity <- dbamerge$`reg5$coefficients`*dbamerge$MeanDBA
 
-#write.csv(dbamerge,file ="DBAsummariesFINAL.csv")
+#write.csv(dbamerge,file ="data/DBAsummariesFINAL.csv")
 
-DBAsummaries <- calculations %>% 
-  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) %>% 
-  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") %>%
-  group_by(dpDBA) %>% 
-  summarise(
+DBAsummaries <- calculations|>
+  dplyr::select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
+  tidyr::pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") |>
+  dplyr::group_by(dpDBA)|>
+  dplyr::summarise(
     MeanDBA = mean(dpDBAVal),
     Stdev = sd(dpDBAVal),
     Min = min(dpDBAVal),
@@ -636,9 +767,9 @@ DBAsummaries <- calculations %>%
 
 
 #not in paper
-test_DBAcats <- calculations %>% 
-  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) %>% 
-  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal")
+test_DBAcats <- calculations|>
+  dplyr::select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
+  tidyr::pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal")
 
 summary(lm(data = test_DBAcats, dpDBAVal ~ dpDBA))
 
@@ -646,12 +777,32 @@ modeldba <- aov(data = test_DBAcats, dpDBAVal ~ dpDBA)
 tukeydba <- TukeyHSD(modeldba, conf.level=.95)
 tukeydba
 
-ggplot(data = test_DBAcats)+
-  geom_boxplot(aes(x = dpDBA, y = dpDBAVal, col = dpDBA ))+
-  theme_bw()+
-  scale_x_discrete(labels=c("Colony","Flying","Plunging","Resting"))+
-  xlab("Activity")+
-  ylab("DBA daily Value")
+ggplot2::ggplot(data = test_DBAcats)+
+  ggplot2::geom_boxplot(aes(x = dpDBA, y = dpDBAVal, col = dpDBA ))+
+  ggplot2::theme_bw()+
+  ggplot2::scale_x_discrete(labels=c("Colony","Flying","Plunging","Resting"))+
+  ggplot2::xlab("Activity")+
+  ggplot2::ylab("DBA daily Value")
+
+test_DBAcats|>
+  ggplot2::ggplot(ggplot2::aes(x=dpDBA, y = dpDBAVal, col = dpDBA), color = cbbPalette) +
+  
+  ggplot2::geom_point(position = ggplot2::position_jitter(width = 0.2), alpha = 0.4 ) +  # Jittered raw data points
+  ggplot2::stat_summary(fun = mean, geom = "point", size = 3 ,#fill = "blue", 
+               position = ggplot2::position_dodge(width = 0.8)) +  # Mean values as bars
+  ggplot2::stat_summary(fun.data = ggplot2::mean_se, geom = "errorbar", width = 0, position = ggplot2::position_dodge(width = 0.8)) +  # Mean standard error bars
+  ggplot2::labs(x = "Activity", y = "DBA daily Value"#,
+       #title = "Mean Values per Category"
+  )  +
+  #facet_wrap(~sex)+
+  ggplot2::theme_bw()+
+  
+  ggplot2::scale_colour_manual(values=cbPalette#, labels =c('Colony', 'Flying', 'Plunging', 'Resting')
+  )+
+  ggplot2::scale_x_discrete(labels =c('Colony', 'Flying', 'Plunging', 'Resting'))+
+  ggplot2::theme(legend.position = "none")
+#theme(axis.text.x = element_blank())+
+# guides(color=guide_legend(title="Activity"))
 
 
 #######################################################################################
@@ -677,9 +828,9 @@ ggscatter(calculationsraw_s, y = "DEE.KJ.d.g",
 )
 
 #including outlier bird MALES
-calculations <- calculationsraw_s %>% 
-  dplyr::filter(sex == "M")%>% 
-  filter(!Time.total > 100)
+calculations <- calculationsraw_s|>
+  dplyr::filter(sex == "M") |>
+  dplyr::filter(!Time.total > 100)
 
 #############################################################################################
 
@@ -720,7 +871,7 @@ Mmods_full.df$names<-rownames(Mmods_full.df)
 Mmods_full.df <- merge( x = Mmods_full.df, y = model_namesdf, by.x = "names", by.y ="name" )
 Mmods_full.df <- Mmods_full.df[order(Mmods_full.df$delta),]
 
-#write.csv(Mmods_full.df,"C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Mfull.csv")
+#write.csv(Mmods_full.df,"E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Mfullv2.csv")
 
 calculations$predicted1<-predict(reg2, newdata = calculations[ , c("TColRest","TFly","TFor")])
 #####
@@ -739,9 +890,9 @@ ggscatter(calculations, y = "DEE.KJ.d.g",
 #####
 ################################ FEMALES
 
-calculations <- calculationsraw_s %>% 
-  dplyr::filter(sex == "F")%>% 
-  filter(!Time.total > 100)
+calculations <- calculationsraw_s|>
+  dplyr::filter(sex == "F")|>
+  dplyr::filter(!Time.total > 100)
 
 #############################################################################################
 reg0 <- lm(data = calculations, formula =DEE.KJ.d.g ~ 1 )
@@ -785,7 +936,7 @@ Fmods_full.df <- merge( x = Fmods_full.df, y = model_namesdf, by.x = "names", by
 
 Fmods_full.df <- Fmods_full.df[order(Fmods_full.df$delta),]
 
-#write.csv(Fmods_full.df,"C:/Users/francis van oordt/OneDrive - McGill University/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Ffull.csv")
+#write.csv(Fmods_full.df,"E:/05BACKUP July 10 2024/Documents/McGill/00Res Prop v2/Chap 1 - DLW axxy/axxy_depth_peru/data/mods_Ffullv2.csv")
 
 calculations$predicted1<-predict(reg3, newdata = calculations[ , c("TColRest","TFlyFor")])
 
@@ -805,8 +956,10 @@ ggscatter(calculations, y = "DEE.KJ.d.g",
 ############################## ############################## ############################## 
 ############################## ############################## 
 ############################## ############################## 
-############################## NOT IN PAPER #
-#differences in pTcol per sex 
+############################## NOT IN PAPER # but for reviewers
+#differences between sexes
+# sex comparisons
+
 
 calculations <- calculationsraw_s[which(calculationsraw_s$Time.total <100),]
 
@@ -824,58 +977,110 @@ car::influencePlot(pTcol.lm)
 pTCol.pred <- ggeffects::ggpredict(
   pTcol.lm,
   terms = c("sex"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 )
 
-ggplot(data = calculations)+
-  geom_point( aes(y = pTCol, x = sex) )
+ggplot2::ggplot(data = calculations)+
+  ggplot2::geom_point( ggplot2::aes(y = pTCol, x = sex) )
 
 
-ggplot(data = calculations)+ #, color = Spec
-  geom_point(aes(y = pTCol, x = sex), position = position_jitter(height = 0, width = 0.1),
+ggplot2::ggplot(data = calculations)+ #, color = Spec
+  ggplot2::geom_point(ggplot2::aes(y = pTCol, x = sex), position = ggplot2::position_jitter(height = 0, width = 0.1),
              alpha = 0.3)+
   #scale_color_manual(values= c("magenta4", "darkgreen"))+
-  geom_pointrange(data=ggeffects::ggpredict(
+  ggplot2::geom_pointrange(data=ggeffects::ggpredict(
     pTcol.lm,
     terms = c("sex"),
-    ci.lvl = 0.95,
+    ci.level = 0.95,
     type = "fe",
-    back.transform= FALSE, 
+    back_transform= FALSE, 
     typical = "mean"
   ) ,
-  aes(x = x, y = predicted, 
+  ggplot2::aes(x = x, y = predicted, 
       ymin = predicted-std.error, ymax = predicted+std.error, color = x))+
-  xlab("Sex")+
-  ylab("pTcol.lm")+
-  guides(color = "none")+
-  theme_bw()
+  ggplot2::xlab("Sex")+
+  ggplot2::ylab("pTcol.lm")+
+  ggplot2::guides(color = "none")+
+  ggplot2::theme_bw()
 
+# pTFly per sex differences
+pTfly.lm <- lm(data = calculations, pTFly ~ sex)
+
+summary(pTfly.lm)
+
+
+# pTFor per sex differences
+
+pTFor.lm <- lm(data = calculations, pTFor ~ sex)
+
+summary(pTFor.lm)
+
+#### DBA differences
+
+
+# dpDBAFor per sex differences
+dpDBAFor.lm <- lm(data = calculations, dpDBAFor ~ sex)
+
+summary(dpDBAFor.lm)
+
+
+# dpDBAFly per sex differences
+dpDBAfly.lm <- lm(data = calculations, dpDBAFly ~ sex)
+
+summary(dpDBAfly.lm)
+
+
+# dpDBACol per sex differences
+
+dpDBACol.lm <- lm(data = calculations, dpDBACol ~ sex)
+
+summary(dpDBACol.lm)
+
+lm.times <- calculations|>
+  tidyr::pivot_longer(cols = c(pTCol, pTRest, pTFly, pTFor), names_to = "pTime", values_to = "pTimeVal")|>
+  dplyr::filter(pTime %in% c( "pTRest", "pTFor"))|>
+  lm( formula = pTimeVal~pTime )
+summary(lm.times)
+
+
+calculations|>
+  tidyr::pivot_longer(cols = c(pTCol, pTRest, pTFly, pTFor), names_to = "pTime", values_to = "pTimeVal")|>
+  dplyr::filter(pTime %in% c( "pTRest", "pTFor"))|>
+  ggplot2::ggplot()+
+  ggplot2::geom_point(ggplot2::aes( x =pTime, y =pTimeVal))
 
 #### plot time budgets split by sexes
-calculations %>% 
-  select(dep_id, pTCol, pTRest, pTFly, pTFor, sex) %>% 
-  pivot_longer(cols = c(pTCol, pTRest, pTFly, pTFor), names_to = "pTime", values_to = "pTimeVal") %>% 
+calculations|>
+  select(dep_id, pTCol, pTRest, pTFly, pTFor, sex)|>
+  pivot_longer(cols = c(pTCol, pTRest, pTFly, pTFor), names_to = "pTime", values_to = "pTimeVal")|>
 ggplot()+
   geom_point(aes(x=pTime, y = pTimeVal, col = pTime), position = position_jitter(height = 0, width = 0.1))+
   facet_wrap(~sex)+
   theme_bw()
 
+
+
 #### plot DBA split by sexes
-calculations %>% 
-  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) %>% 
-  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") %>% 
-  ggplot()+
-  geom_point(aes(x=dpDBA, y = dpDBAVal, col = dpDBA), position = position_jitter(height = 0, width = 0.1))+
-  facet_wrap(~sex)+
-  theme_bw()
+calculations|> 
+  dplyr::select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) |> 
+  tidyr::pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") |> 
+  ggplot2::ggplot()+
+  ggplot2::geom_point(ggplot2::aes(x=dpDBA, y = dpDBAVal, col = dpDBA), position = ggplot2::position_jitter(height = 0, width = 0.1))+
+  ggplot2::facet_wrap(~sex)+
+  ggplot2::theme_bw()
+
+dpDBACol.lm <- lm(data = calculations, dpDBACol ~ sex)
+summary(dpDBACol.lm)
+dpDBAFly.lm <- lm(data = calculations, dpDBAFly ~ sex)
+summary(dpDBAFly.lm)
 
 #point plots mean daily DBA activiy, split sexes
-calculations %>% 
-  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) %>% 
-  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") %>% 
+calculations|>
+  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
+  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal")|>
   ggplot(aes(x=dpDBA, y = dpDBAVal, col = dpDBA)) +
   geom_point( position = position_jitter(width = 0.2), alpha = 0.5) +  # Jittered raw data points
   stat_summary(fun = mean, geom = "point", fill = "blue", position = position_dodge(width = 0.8)) +  # Mean values as bars
@@ -889,9 +1094,9 @@ calculations %>%
 
 
 #point plots mean Time budget per activiy, split sexes
-calculations %>% 
-  select(dep_id, pTCol,pTFly,pTFor,pTRest, sex) %>% 
-  pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal") %>% 
+calculations|>
+  select(dep_id, pTCol,pTFly,pTFor,pTRest, sex)|>
+  pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal")|>
   ggplot(aes(x=pTime, y = pTimeVal, col = pTime)) +
   geom_point(position = position_jitter(width = 0.2), alpha = 0.5 ) +  # Jittered raw data points
   stat_summary(fun = mean, geom = "point", fill = "blue", position = position_dodge(width = 0.8)) +  # Mean values as bars
@@ -905,9 +1110,9 @@ calculations %>%
 
 
 #boxplots mean daily DBA per activity, split sexes
-DBAbox <- calculations %>% 
-  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex) %>% 
-  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal") %>% 
+DBAbox <- calculations|>
+  select(dep_id, dpDBACol, dpDBARest, dpDBAFly, dpDBAFor, sex)|>
+  pivot_longer(cols = c(dpDBACol, dpDBARest, dpDBAFly, dpDBAFor), names_to = "dpDBA", values_to = "dpDBAVal")|>
   ggplot(aes(x=dpDBA, y = dpDBAVal, col = dpDBA)) +
   geom_boxplot( ) +  # Jittered raw data points
   #stat_summary(fun = mean, geom = "point", fill = "blue", position = position_dodge(width = 0.8)) +  # Mean values as bars
@@ -922,9 +1127,9 @@ DBAbox <- calculations %>%
 
 #time plots per sex
 
-timebox <- calculations %>% 
-  select(dep_id, pTCol,pTFly,pTFor,pTRest, sex) %>% 
-  pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal") %>% 
+timebox <- calculations|>
+  select(dep_id, pTCol,pTFly,pTFor,pTRest, sex)|>
+  pivot_longer(cols = c(pTCol,pTFly,pTFor,pTRest), names_to = "pTime", values_to = "pTimeVal")|>
   ggplot(aes(x=pTime, y = pTimeVal, col = pTime)) +
   geom_boxplot( ) +  # Jittered raw data points
   #stat_summary(fun = mean, geom = "point", fill = "blue", position = position_dodge(width = 0.8)) +  # Mean values as bars
@@ -956,9 +1161,9 @@ car::influencePlot(dpDBACol.lm)
 dpDBACol.pred <- ggeffects::ggpredict(
   dpDBACol.lm,
   terms = c("sex"),
-  ci.lvl = 0.95,
+  ci.level = 0.95,
   type = "fe",
-  back.transform= FALSE, 
+  back_transform= FALSE, 
   typical = "mean"
 )
 
@@ -966,22 +1171,22 @@ ggplot(data = calculations)+
   geom_point( aes(y = dpDBACol, x = sex) )
 
 
-ggplot(data = calculations)+ #, color = Spec
-  geom_point(aes(y = dpDBACol, x = sex), position = position_jitter(height = 0, width = 0.1),
+ggplot2::ggplot(data = calculations)+ #, color = Spec
+  ggplot2::geom_point(ggplot2::aes(y = dpDBACol, x = sex), position = ggplot2::position_jitter(height = 0, width = 0.1),
              alpha = 0.3)+
   #scale_color_manual(values= c("magenta4", "darkgreen"))+
-  geom_pointrange(data=ggeffects::ggpredict(
+  ggplot2::geom_pointrange(data=ggeffects::ggpredict(
     dpDBACol.lm,
     terms = c("sex"),
-    ci.lvl = 0.95,
+    ci.level = 0.95,
     type = "fe",
-    back.transform= FALSE, 
+    back_transform= FALSE, 
     typical = "mean"
   ) ,
-  aes(x = x, y = predicted, 
+  ggplot2::aes(x = x, y = predicted, 
       ymin = predicted-std.error, ymax = predicted+std.error, color = x))+
-  xlab("Sex")+
-  ylab("dpDBACol.lm")+
-  guides(color = "none")+
-  theme_bw()
+  ggplot2::xlab("Sex")+
+  ggplot2::ylab("dpDBACol.lm")+
+  ggplot2::guides(color = "none")+
+  ggplot2::theme_bw()
 
