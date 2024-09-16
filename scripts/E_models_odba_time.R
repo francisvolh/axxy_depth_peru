@@ -1189,4 +1189,7 @@ ggplot2::ggplot(data = calculations)+ #, color = Spec
   ggplot2::ylab("dpDBACol.lm")+
   ggplot2::guides(color = "none")+
   ggplot2::theme_bw()
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0c5410f91743252e58a4968d4ca5f3253c1389e2
