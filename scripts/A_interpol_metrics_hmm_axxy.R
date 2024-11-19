@@ -31,7 +31,6 @@ gps_data <- readRDS('C:/Users/francis van oordt/Documents/McGill/Field data/gps_
 # make spatial points object
 locs_sf <- sf::st_as_sf(gps_data, coords = c('lon', 'lat'), crs = 4326) ## I am not reprojecting because this is the tropics
 
-locs_sf <- sf::st_transform(locs_sf, crs = 5387) ## 
 
 
 
@@ -62,6 +61,8 @@ leaflet::leaflet()|>
     options = leaflet::tileOptions(variant='stamen_toner_lite', apikey = 'hidden') )|>
   leaflet::addPolylines(data = tracks_sf, color = col)
 
+#convert to projected coordinates for better math
+locs_sf <- sf::st_transform(locs_sf, crs = 5387) ## 
 
 #allisons way
 mapview::mapview(tracks_sf, zcol = 'dep_id') 
