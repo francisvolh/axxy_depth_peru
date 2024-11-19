@@ -59,7 +59,7 @@ leaflet::leaflet()|>
                         '&copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a> ' ,
                         '&copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> ' ,
                         '&copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'),
-    options = leaflet::tileOptions(variant='stamen_toner_lite', apikey = '76a5a6d3-2a88-4129-a816-849bdbaebd56') )|>
+    options = leaflet::tileOptions(variant='stamen_toner_lite', apikey = 'hidden') )|>
   leaflet::addPolylines(data = tracks_sf, color = col)
 
 
